@@ -1,0 +1,519 @@
+"use client"
+
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
+import {
+  ArrowLeftIcon,
+  UsersIcon,
+  ChatBubbleLeftRightIcon,
+  PlusIcon,
+  PencilIcon,
+  TrashIcon,
+} from "@heroicons/react/24/outline"
+
+interface User {
+  userid: string
+  username: string
+  password: string
+  role: "user" | "admin"
+}
+
+interface AdminPageProps {
+  users: User[]
+  totalChats: number
+  currentUser: User | null
+  onCreateUser: (userData: Omit<User, "userid">) => void
+  onUpdateUser: (userid: string, userData: Partial<User>) => void
+  onDeleteUser: (userid: string) => void
+  onBackToChat: () => void
+}
+
+const validatePassword = (password: string): string | null => {
+  if (password.length < 8) {
+    return "Password must be at least 8 characters long"
+  }
+  if (!/[A-Z]/.test(password)) {
+    return "Password must contain at least one capital letter"
+  }
+  if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+    return "Password must contain at least one special character"
+  }
+  return null
+}
+
+export function AdminPage({
+  users,
+  totalChats,
+  currentUser,
+  onCreateUser,
+  onUpdateUser,
+  onDeleteUser,
+  onBackToChat,
+}: AdminPageProps) {
+  const [showCreateDialog, setShowCreateDialog] = useState(false)
+  const [showEditDialog, setShowEditDialog] = useState(false)
+  const [editingUser, setEditingUser] = useState<User | null>(null)
+  const [formData, setFormData] = useState({
+    username: "",
+    password: "",
+    confirmPassword: "", // Added password confirmation
+    role: "user" as "user" | "admin",
+  })
+  const [errors, setErrors] = useState<{ [key: string]: string }>({}) // Added error state
+
+  // Generate user frequency data for chart
+  const userFrequencyData = [
+    { name: "Jan", users: 12 },
+    { name: "Feb", users: 19 },
+    { name: "Mar", users: 15 },
+    { name: "Apr", users: 25 },
+    { name: "May", users: 22 },
+    { name: "Jun", users: 30 },
+    { name: "Jul", users: 28 },
+    { name: "Aug", users: 35 },
+    { name: "Sep", users: 32 },
+    { name: "Oct", users: 40 },
+    { name: "Nov", users: 38 },
+    { name: "Dec", users: 45 },
+  ]
+
+  const handleCreateUser = () => {
+    const newErrors: { [key: string]: string } = {}
+
+    if (!formData.username.trim()) {
+      newErrors.username = "Username is required"
+    }
+    if (!formData.password) {
+      newErrors.password = "Password is required"
+    } else {
+      const passwordError = validatePassword(formData.password)
+      if (passwordError) {
+        newErrors.password = passwordError
+      }
+    }
+    if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match"
+    }
+    if (users.some((u) => u.username === formData.username.trim())) {
+      newErrors.username = "Username already exists"
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors)
+      return
+    }
+
+    onCreateUser({
+      username: formData.username.trim(),
+      password: formData.password,
+      role: formData.role,
+    })
+    setFormData({ username: "", password: "", confirmPassword: "", role: "user" })
+    setErrors({})
+    setShowCreateDialog(false)
+  }
+
+  const handleEditUser = (user: User) => {
+    setEditingUser(user)
+    setFormData({
+      username: user.username,
+      password: "",
+      confirmPassword: "",
+      role: user.role,
+    })
+    setErrors({})
+    setShowEditDialog(true)
+  }
+
+  const handleUpdateUser = () => {
+    const newErrors: { [key: string]: string } = {}
+
+    if (!formData.username.trim()) {
+      newErrors.username = "Username is required"
+    }
+    if (formData.password) {
+      const passwordError = validatePassword(formData.password)
+      if (passwordError) {
+        newErrors.password = passwordError
+      }
+      if (formData.password !== formData.confirmPassword) {
+        newErrors.confirmPassword = "Passwords do not match"
+      }
+    }
+    if (users.some((u) => u.username === formData.username.trim() && u.userid !== editingUser?.userid)) {
+      newErrors.username = "Username already exists"
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors)
+      return
+    }
+
+    if (editingUser) {
+      const updateData: Partial<User> = {
+        username: formData.username.trim(),
+        role: formData.role,
+      }
+      // Only update password if provided
+      if (formData.password) {
+        updateData.password = formData.password
+      }
+
+      onUpdateUser(editingUser.userid, updateData)
+      setFormData({ username: "", password: "", confirmPassword: "", role: "user" })
+      setErrors({})
+      setEditingUser(null)
+      setShowEditDialog(false)
+    }
+  }
+
+  const handleDeleteUser = (userid: string) => {
+    if (currentUser && currentUser.userid === userid) {
+      alert("You cannot delete your own account!")
+      return
+    }
+
+    if (confirm("Are you sure you want to delete this user?")) {
+      onDeleteUser(userid)
+    }
+  }
+
+  return (
+    <div className="flex-1 flex flex-col h-screen bg-background">
+      {/* Header */}
+      <div className="border-b border-border p-4 flex items-center gap-4">
+        <Button variant="ghost" size="sm" onClick={onBackToChat} className="flex items-center gap-2">
+          <ArrowLeftIcon className="h-4 w-4" />
+          Back to Chat
+        </Button>
+        <h1 className="text-xl font-semibold">Admin Dashboard</h1>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="max-w-7xl mx-auto space-y-6">
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+                <UsersIcon className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{users.length}</div>
+                <p className="text-xs text-muted-foreground">
+                  {users.filter((u) => u.role === "admin").length} admin(s),{" "}
+                  {users.filter((u) => u.role === "user").length} user(s)
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Chats</CardTitle>
+                <ChatBubbleLeftRightIcon className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{totalChats}</div>
+                <p className="text-xs text-muted-foreground">Active conversations in the system</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* User Frequency Chart */}
+          <Card>
+            <CardHeader>
+              <CardTitle>User Activity Frequency</CardTitle>
+              <CardDescription>Monthly user engagement over the past year</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={userFrequencyData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#6b7280" opacity={0.3} />
+                    <XAxis
+                      dataKey="name"
+                      tick={{ fill: "#374151", fontSize: 12 }}
+                      axisLine={{ stroke: "#6b7280" }}
+                      tickLine={{ stroke: "#6b7280" }}
+                      className="dark:[&_.recharts-text]:fill-gray-300"
+                    />
+                    <YAxis
+                      tick={{ fill: "#374151", fontSize: 12 }}
+                      axisLine={{ stroke: "#6b7280" }}
+                      tickLine={{ stroke: "#6b7280" }}
+                      className="dark:[&_.recharts-text]:fill-gray-300"
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#ffffff",
+                        border: "1px solid #e5e7eb",
+                        borderRadius: "8px",
+                        color: "#111827",
+                        boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
+                      }}
+                      labelStyle={{ color: "#111827" }}
+                      className="dark:[&>div]:!bg-gray-800 dark:[&>div]:!border-gray-600 dark:[&>div]:!text-gray-100 dark:[&_.recharts-tooltip-label]:!text-gray-100"
+                    />
+                    <Bar dataKey="users" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* User Management Table */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>User Management</CardTitle>
+                  <CardDescription>Manage all users in the system</CardDescription>
+                </div>
+                <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+                  <DialogTrigger asChild>
+                    <Button className="flex items-center gap-2">
+                      <PlusIcon className="h-4 w-4" />
+                      Create User
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Create New User</DialogTitle>
+                      <DialogDescription>
+                        Add a new user to the system with their credentials and role.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="username" className="text-right">
+                          Username
+                        </Label>
+                        <div className="col-span-3">
+                          <Input
+                            id="username"
+                            value={formData.username}
+                            onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                            className={errors.username ? "border-red-500" : ""}
+                          />
+                          {errors.username && <p className="text-sm text-red-500 mt-1">{errors.username}</p>}
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="password" className="text-right">
+                          Password
+                        </Label>
+                        <div className="col-span-3">
+                          <Input
+                            id="password"
+                            type="password"
+                            value={formData.password}
+                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                            className={errors.password ? "border-red-500" : ""}
+                          />
+                          {errors.password && <p className="text-sm text-red-500 mt-1">{errors.password}</p>}
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="confirmPassword" className="text-right">
+                          Confirm Password
+                        </Label>
+                        <Input
+                          id="confirmPassword"
+                          type="password"
+                          value={formData.confirmPassword}
+                          onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                          className={`col-span-3 ${errors.confirmPassword ? "border-red-500" : ""}`}
+                        />
+                        {errors.confirmPassword && (
+                          <div className="col-span-3 col-start-2">
+                            <p className="text-sm text-red-500 mt-1">{errors.confirmPassword}</p>
+                          </div>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="role" className="text-right">
+                          Role
+                        </Label>
+                        <div className="col-span-3">
+                          <Select
+                            value={formData.role}
+                            onValueChange={(value: "user" | "admin") => setFormData({ ...formData, role: value })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="user">User</SelectItem>
+                              <SelectItem value="admin">Admin</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button onClick={handleCreateUser}>Create User</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>User ID</TableHead>
+                    <TableHead>Username</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {users.map((user) => (
+                    <TableRow key={user.userid}>
+                      <TableCell className="font-mono text-sm">{user.userid}</TableCell>
+                      <TableCell className="font-medium">{user.username}</TableCell>
+                      <TableCell>
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            user.role === "admin"
+                              ? "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300"
+                              : "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300"
+                          }`}
+                        >
+                          {user.role}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditUser(user)}
+                            className="h-8 w-8 p-0"
+                          >
+                            <PencilIcon className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteUser(user.userid)}
+                            className={`h-8 w-8 p-0 ${
+                              currentUser && currentUser.userid === user.userid
+                                ? "text-muted-foreground cursor-not-allowed"
+                                : "text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                            }`}
+                            disabled={currentUser && currentUser.userid === user.userid}
+                          >
+                            <TrashIcon className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Edit User Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit User</DialogTitle>
+            <DialogDescription>Update user information and role.</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-username" className="text-right">
+                Username
+              </Label>
+              <div className="col-span-3">
+                <Input
+                  id="edit-username"
+                  value={formData.username}
+                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                  className={errors.username ? "border-red-500" : ""}
+                />
+                {errors.username && <p className="text-sm text-red-500 mt-1">{errors.username}</p>}
+              </div>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-password" className="text-right">
+                New Password
+              </Label>
+              <div className="col-span-3 w-full">
+                <Input
+                  id="edit-password"
+                  type="password"
+                  placeholder="Leave empty to keep current password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  className={`w-full ${errors.password ? "border-red-500" : ""}`}
+                />
+                {errors.password && <p className="text-sm text-red-500 mt-1">{errors.password}</p>}
+              </div>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-confirmPassword" className="text-right">
+                Confirm Password
+              </Label>
+              <Input
+                id="edit-confirmPassword"
+                type="password"
+                placeholder="Confirm new password"
+                value={formData.confirmPassword}
+                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                className={`col-span-3 ${errors.confirmPassword ? "border-red-500" : ""}`}
+              />
+              {errors.confirmPassword && (
+                <div className="col-span-3 col-start-2">
+                  <p className="text-sm text-red-500 mt-1">{errors.confirmPassword}</p>
+                </div>
+              )}
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-role" className="text-right">
+                Role
+              </Label>
+              <div className="col-span-3">
+                <Select
+                  value={formData.role}
+                  onValueChange={(value: "user" | "admin") => setFormData({ ...formData, role: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="user">User</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={handleUpdateUser}>Update User</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}
