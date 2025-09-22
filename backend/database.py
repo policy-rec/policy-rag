@@ -349,7 +349,7 @@ class DBHandler:
         formatted_output = ""
 
         # all_messages = [msg for chat in chat_data for msg in chat]
-
+        chat_data = chat_data[0]
         sorted_chats = sorted(chat_data, key=lambda x: x["timestamp"])
         last_chats = sorted_chats[-10:]
 
@@ -358,6 +358,9 @@ class DBHandler:
             formatted_output += f"{sender_label}: {msg['content']}\n"
 
         return formatted_output
+    
+    # def __format_chat_history__(self, chat_data) -> str:
+    #     User.get_chats_formatted()
     # === YOUR EXISTING QUEUE/LOCK METHODS (unchanged) ===
     # def __is_json_empty__(self):
     #     QUEUE_FILE = os.getenv('QUEUE_FILE')
@@ -394,6 +397,7 @@ class DBHandler:
         """Get all chats for a user"""
         with self.Session() as session:
             user = session.query(User).get(user_id)
+            # print(user)
             if user:
                 return user.get_all_chats_data()
             return []

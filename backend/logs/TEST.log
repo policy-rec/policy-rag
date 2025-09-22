@@ -27,3 +27,91 @@
 [2025-09-22 15:55:26 GMT+5:00] | [SYSTEM]: LLM API Connected
 [2025-09-22 15:55:26 GMT+5:00] | [SYSTEM]: Document class Initialized
 [2025-09-22 15:55:30 GMT+5:00] | [SYSTEM]: Connected to PineconeDB
+[2025-09-22 16:13:59 GMT+5:00] | [SYSTEM]: DBToolKit class Initialized
+[2025-09-22 16:14:04 GMT+5:00] | [SYSTEM]: PostgreSQL Database (Supabase) Initialized
+[2025-09-22 16:14:09 GMT+5:00] | [SYSTEM]: LLM API Connected
+[2025-09-22 16:14:09 GMT+5:00] | [SYSTEM]: Document class Initialized
+[2025-09-22 16:14:15 GMT+5:00] | [SYSTEM]: Connected to PineconeDB
+[2025-09-22 16:25:05 GMT+5:00] | [SYSTEM]: /chat API Called
+[2025-09-22 16:25:06 GMT+5:00] | [SYSTEM]: Inserted a message to PostgreSQL Database
+[2025-09-22 16:28:59 GMT+5:00] | [SYSTEM]: DBToolKit class Initialized
+[2025-09-22 16:29:04 GMT+5:00] | [SYSTEM]: PostgreSQL Database (Supabase) Initialized
+[2025-09-22 16:29:08 GMT+5:00] | [SYSTEM]: LLM API Connected
+[2025-09-22 16:29:08 GMT+5:00] | [SYSTEM]: Document class Initialized
+[2025-09-22 16:29:11 GMT+5:00] | [SYSTEM]: Connected to PineconeDB
+[2025-09-22 16:29:19 GMT+5:00] | [SYSTEM]: /chat API Called
+[2025-09-22 16:29:20 GMT+5:00] | [SYSTEM]: Inserted a message to PostgreSQL Database
+[2025-09-22 16:30:17 GMT+5:00] | [SYSTEM]: DBToolKit class Initialized
+[2025-09-22 16:30:22 GMT+5:00] | [SYSTEM]: PostgreSQL Database (Supabase) Initialized
+[2025-09-22 16:30:26 GMT+5:00] | [SYSTEM]: LLM API Connected
+[2025-09-22 16:30:26 GMT+5:00] | [SYSTEM]: Document class Initialized
+[2025-09-22 16:30:33 GMT+5:00] | [SYSTEM]: Connected to PineconeDB
+[2025-09-22 16:31:01 GMT+5:00] | [SYSTEM]: /chat API Called
+[2025-09-22 16:31:02 GMT+5:00] | [SYSTEM]: Inserted a message to PostgreSQL Database
+[2025-09-22 16:37:25 GMT+5:00] | [SYSTEM]: DBToolKit class Initialized
+[2025-09-22 16:37:31 GMT+5:00] | [SYSTEM]: PostgreSQL Database (Supabase) Initialized
+[2025-09-22 16:37:34 GMT+5:00] | [SYSTEM]: LLM API Connected
+[2025-09-22 16:37:34 GMT+5:00] | [SYSTEM]: Document class Initialized
+[2025-09-22 16:37:41 GMT+5:00] | [SYSTEM]: Connected to PineconeDB
+[2025-09-22 16:37:57 GMT+5:00] | [SYSTEM]: /chat API Called
+[2025-09-22 16:37:58 GMT+5:00] | [SYSTEM]: Inserted a message to PostgreSQL Database
+[2025-09-22 16:38:02 GMT+5:00] | --> [RESP:1]: Validator: Greeting
+[2025-09-22 16:38:06 GMT+5:00] | --> [RESP:1]: Hello there! How can I assist you today? \U0001f60a
+[2025-09-22 16:38:07 GMT+5:00] | [SYSTEM]: Inserted a message to PostgreSQL Database
+[2025-09-22 16:38:07 GMT+5:00] | [SYSTEM]: /chat API Returned
+[2025-09-22 16:40:04 GMT+5:00] | [SYSTEM]: /chat API Called
+[2025-09-22 16:40:05 GMT+5:00] | [SYSTEM]: Inserted a message to PostgreSQL Database
+[2025-09-22 16:40:08 GMT+5:00] | --> [RESP:1]: Validator: Greeting
+[2025-09-22 16:40:11 GMT+5:00] | --> [RESP:1]: \u0645\u06cc\u06ba \u0679\u06be\u06cc\u06a9 \u06c1\u0648\u06ba\u060c \u0634\u06a9\u0631\u06cc\u06c1! \u0622\u067e \u06a9\u06cc\u0633\u06d2 \u06c1\u06cc\u06ba\u061f \U0001f60a
+[2025-09-22 16:40:12 GMT+5:00] | [SYSTEM]: Inserted a message to PostgreSQL Database
+[2025-09-22 16:40:12 GMT+5:00] | [SYSTEM]: /chat API Returned
+[2025-09-22 16:43:28 GMT+5:00] | [SYSTEM]: /upload-document API Called
+[2025-09-22 16:43:28 GMT+5:00] | [SYSTEM]: Starting document processing...
+[2025-09-22 16:43:28 GMT+5:00] | [SYSTEM]: Document saved to local folder...
+[2025-09-22 16:43:42 GMT+5:00] | [SYSTEM]: Document summary created...
+[2025-09-22 16:43:43 GMT+5:00] | [SYSTEM]: Document inserted in Database...
+[2025-09-22 16:43:56 GMT+5:00] | [SYSTEM]: Upsert Document --- Upserting Records to PineconeDB
+[2025-09-22 16:44:01 GMT+5:00] | [SYSTEM]: Upsert Document --- Upserting Records to PineconeDB SUCCESSFUL
+[2025-09-22 16:44:01 GMT+5:00] | [SYSTEM]: Document inserted in PineconeDB...
+[2025-09-22 16:44:03 GMT+5:00] | [SYSTEM]: Images extracted from the document...
+[2025-09-22 16:44:03 GMT+5:00] | [SYSTEM]: Embedding and Upserting Images --- CLIP Embedding Images
+[2025-09-22 16:48:49 GMT+5:00] | [SYSTEM]: Embedding and Upserting Images --- Upserting Images to PineconeDB
+[2025-09-22 16:48:52 GMT+5:00] | [SYSTEM]: Embedding and Upserting Images --- Upserting Images to PineconeDB SUCCESSFUL
+[2025-09-22 16:48:52 GMT+5:00] | [SYSTEM]: Images inserted in PineconeDB...
+[2025-09-22 16:48:52 GMT+5:00] | [SYSTEM]: /upload-document API Returned
+[2025-09-22 16:49:49 GMT+5:00] | [SYSTEM]: /chat API Called
+[2025-09-22 16:49:52 GMT+5:00] | [SYSTEM]: Inserted a message to PostgreSQL Database
+[2025-09-22 16:49:55 GMT+5:00] | --> [RESP:1]: Validator: Valid RAG Question
+[2025-09-22 16:49:55 GMT+5:00] | [SYSTEM]: Querying Text in PineconeDB
+[2025-09-22 16:50:06 GMT+5:00] | [SYSTEM]: Querying Images in PineconeDB
+[2025-09-22 16:50:17 GMT+5:00] | --> [RESP:1]: Religious Education Centre (REC) is an educational setup under the Shia Imami Ismaili Tariqah and Religious Education Board in Pakistan, focused on providing religious education to Ismaili children. Here’s a concise overview based on the policies and guidelines:
+
+1. **Purpose and Objectives:**
+   - To manage REC operations effectively with clear guidelines.
+   - Define roles and responsibilities of all stakeholders.
+   - Promote uniformity, professionalism, and quality in REC management.
+   - Establish strong institutional links between National, Regional, and Local Tariqah Boards and RECs.
+   - Ensure optimal use of resources and achieve quality benchmarks.
+
+2. **Structure and Location:**
+   - RECs are preferably located on or near Jamat Khana premises.
+   - Operate under a Religious Education Centre Committee (RECC) coordinated with the Local Board.
+   - Larger RECs have dedicated RECCs; smaller areas may have a cluster RECC for multiple RECs.
+   - The Head Teacher manages daily operations according to policy guidelines.
+
+3. **Data and Monitoring:**
+   - RECs keep detailed records of student enrollment, attendance, and access to textbooks and activity books.
+   - Teacher data includes numbers, training status, and subjects taught.
+   - Facilities and premises used are documented, including utilities and infrastructure.
+
+4. **Focus Areas:**
+   - Creating an enabling learning environment.
+   - Teacher training and professional development.
+   - Community and parental involvement.
+   - Safety and resource management.
+
+This framework ensures that RECs provide consistent, high-quality religious education aligned with the ethical and educational goals of the Ismaili Tariqah.
+
+Would you like more details on any specific aspect of REC?
+[2025-09-22 16:50:18 GMT+5:00] | [SYSTEM]: Inserted a message to PostgreSQL Database
+[2025-09-22 16:50:18 GMT+5:00] | [SYSTEM]: /chat API Returned
