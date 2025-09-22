@@ -1,0 +1,29 @@
+[2025-09-18 16:22:21 GMT+5:00] | [SYSTEM]: Document class Initialized
+[2025-09-18 16:22:23 GMT+5:00] | [SYSTEM]: Connected to PineconeDB
+[2025-09-18 16:22:59 GMT+5:00] | [SYSTEM]: DBToolKit class Initialized
+[2025-09-18 16:23:05 GMT+5:00] | [SYSTEM]: PostgreSQL Database (Supabase) Initialized
+[2025-09-18 16:23:09 GMT+5:00] | [SYSTEM]: LLM API Connected
+[2025-09-18 16:23:09 GMT+5:00] | [SYSTEM]: Document class Initialized
+[2025-09-18 16:23:11 GMT+5:00] | [SYSTEM]: Connected to PineconeDB
+[2025-09-18 16:24:15 GMT+5:00] | [SYSTEM]: /chat API Called
+[2025-09-18 16:24:19 GMT+5:00] | [SYSTEM]: Inserted a message to PostgreSQL Database
+[2025-09-22 15:47:57 GMT+5:00] | [SYSTEM]: DBToolKit class Initialized
+[2025-09-22 15:48:07 GMT+5:00] | [SYSTEM]: PostgreSQL Database (Supabase) Initialized
+[2025-09-22 15:48:14 GMT+5:00] | [SYSTEM]: LLM API Connected
+[2025-09-22 15:48:14 GMT+5:00] | [SYSTEM]: Document class Initialized
+[2025-09-22 15:48:19 GMT+5:00] | [SYSTEM]: Connected to PineconeDB
+[2025-09-22 15:50:38 GMT+5:00] | [SYSTEM]: DBToolKit class Initialized
+[2025-09-22 15:50:43 GMT+5:00] | [SYSTEM]: PostgreSQL Database (Supabase) Initialized
+[2025-09-22 15:50:48 GMT+5:00] | [SYSTEM]: LLM API Connected
+[2025-09-22 15:50:48 GMT+5:00] | [SYSTEM]: Document class Initialized
+[2025-09-22 15:50:54 GMT+5:00] | [SYSTEM]: Connected to PineconeDB
+[2025-09-22 15:54:12 GMT+5:00] | [SYSTEM]: DBToolKit class Initialized
+[2025-09-22 15:54:17 GMT+5:00] | [SYSTEM]: PostgreSQL Database (Supabase) Initialized
+[2025-09-22 15:54:20 GMT+5:00] | [SYSTEM]: LLM API Connected
+[2025-09-22 15:54:20 GMT+5:00] | [SYSTEM]: Document class Initialized
+[2025-09-22 15:54:23 GMT+5:00] | [SYSTEM]: Connected to PineconeDB
+[2025-09-22 15:55:17 GMT+5:00] | [SYSTEM]: DBToolKit class Initialized
+[2025-09-22 15:55:21 GMT+5:00] | [SYSTEM]: PostgreSQL Database (Supabase) Initialized
+[2025-09-22 15:55:26 GMT+5:00] | [SYSTEM]: LLM API Connected
+[2025-09-22 15:55:26 GMT+5:00] | [SYSTEM]: Document class Initialized
+[2025-09-22 15:55:30 GMT+5:00] | [SYSTEM]: Connected to PineconeDB
