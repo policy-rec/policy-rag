@@ -249,3 +249,5 @@ Would you like more details on any specific aspect of REC?
 [2025-09-24 16:51:16 GMT+5:00] | [SYSTEM]: /getuserchats/1 API Returned
 [2025-09-24 16:58:10 GMT+5:00] | [SYSTEM]: /getuserchats/2 API Called
 [2025-09-24 16:58:12 GMT+5:00] | [SYSTEM]: /getuserchats/2 API Returned
+[2025-09-24 16:58:33 GMT+5:00] | [SYSTEM]: /getuserchats/1 API Called
+[2025-09-24 16:58:36 GMT+5:00] | [SYSTEM]: /getuserchats/1 API Returned
