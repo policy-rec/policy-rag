@@ -1,0 +1,12 @@
+fastapi==0.116.0
+PyMuPDF
+openai==1.93.1
+Pillow==11.3.0
+pinecone==7.3.0
+pydantic==2.11.7
+python-dotenv==1.1.1
+SQLAlchemy==2.0.36
+tiktoken==0.8.0
+torch==2.7.1
+python-multipart
+uvicorn

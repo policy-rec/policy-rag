@@ -268,7 +268,6 @@ export function AdminPage({
                         boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
                       }}
                       labelStyle={{ color: "#111827" }}
-                      className="dark:[&>div]:!bg-gray-800 dark:[&>div]:!border-gray-600 dark:[&>div]:!text-gray-100 dark:[&_.recharts-tooltip-label]:!text-gray-100"
                     />
                     <Bar dataKey="users" fill="#3b82f6" radius={[4, 4, 0, 0]} />
                   </BarChart>
@@ -414,11 +413,11 @@ export function AdminPage({
                             size="sm"
                             onClick={() => handleDeleteUser(user.userid)}
                             className={`h-8 w-8 p-0 ${
-                              currentUser && currentUser.userid === user.userid
+                              (!!currentUser && currentUser.userid === user.userid)
                                 ? "text-muted-foreground cursor-not-allowed"
                                 : "text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
                             }`}
-                            disabled={currentUser && currentUser.userid === user.userid}
+                            disabled={!!currentUser && currentUser.userid === user.userid}
                           >
                             <TrashIcon className="h-4 w-4" />
                           </Button>

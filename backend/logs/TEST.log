@@ -213,3 +213,39 @@ Would you like more details on any specific aspect of REC?
 [2025-09-24 15:03:36 GMT+5:00] | [SYSTEM]: LLM API Connected
 [2025-09-24 15:03:36 GMT+5:00] | [SYSTEM]: Document class Initialized
 [2025-09-24 15:03:40 GMT+5:00] | [SYSTEM]: Connected to PineconeDB
+[2025-09-24 16:14:56 GMT+5:00] | [SYSTEM]: DBToolKit class Initialized
+[2025-09-24 16:15:04 GMT+5:00] | [SYSTEM]: PostgreSQL Database (Supabase) Initialized
+[2025-09-24 16:15:08 GMT+5:00] | [SYSTEM]: LLM API Connected
+[2025-09-24 16:15:08 GMT+5:00] | [SYSTEM]: Document class Initialized
+[2025-09-24 16:15:10 GMT+5:00] | [SYSTEM]: Connected to PineconeDB
+[2025-09-24 16:22:29 GMT+5:00] | [SYSTEM]: DBToolKit class Initialized
+[2025-09-24 16:22:35 GMT+5:00] | [SYSTEM]: PostgreSQL Database (Supabase) Initialized
+[2025-09-24 16:22:37 GMT+5:00] | [SYSTEM]: LLM API Connected
+[2025-09-24 16:22:37 GMT+5:00] | [SYSTEM]: Document class Initialized
+[2025-09-24 16:22:39 GMT+5:00] | [SYSTEM]: Connected to PineconeDB
+[2025-09-24 16:22:53 GMT+5:00] | [SYSTEM]: /getuserchats/1 API Called
+[2025-09-24 16:22:54 GMT+5:00] | [SYSTEM]: /getuserchats/1 API Returned
+[2025-09-24 16:24:54 GMT+5:00] | [SYSTEM]: /getchatmessage/1 API Called
+[2025-09-24 16:24:55 GMT+5:00] | [SYSTEM]: /getchatmessage/1 API Returned
+[2025-09-24 16:25:01 GMT+5:00] | [SYSTEM]: /getchatmessage/1 API Called
+[2025-09-24 16:25:02 GMT+5:00] | [SYSTEM]: /getchatmessage/1 API Returned
+[2025-09-24 16:25:06 GMT+5:00] | [SYSTEM]: /getuserchats/1 API Called
+[2025-09-24 16:25:07 GMT+5:00] | [SYSTEM]: /getuserchats/1 API Returned
+[2025-09-24 16:37:15 GMT+5:00] | [SYSTEM]: DBToolKit class Initialized
+[2025-09-24 16:37:22 GMT+5:00] | [SYSTEM]: PostgreSQL Database (Supabase) Initialized
+[2025-09-24 16:37:25 GMT+5:00] | [SYSTEM]: LLM API Connected
+[2025-09-24 16:37:25 GMT+5:00] | [SYSTEM]: Document class Initialized
+[2025-09-24 16:37:26 GMT+5:00] | [SYSTEM]: Connected to PineconeDB
+[2025-09-24 16:37:38 GMT+5:00] | [SYSTEM]: DBToolKit class Initialized
+[2025-09-24 16:37:44 GMT+5:00] | [SYSTEM]: PostgreSQL Database (Supabase) Initialized
+[2025-09-24 16:37:46 GMT+5:00] | [SYSTEM]: LLM API Connected
+[2025-09-24 16:37:46 GMT+5:00] | [SYSTEM]: Document class Initialized
+[2025-09-24 16:37:47 GMT+5:00] | [SYSTEM]: Connected to PineconeDB
+[2025-09-24 16:47:14 GMT+5:00] | [SYSTEM]: /getuserchats/1 API Called
+[2025-09-24 16:47:16 GMT+5:00] | [SYSTEM]: /getuserchats/1 API Returned
+[2025-09-24 16:50:52 GMT+5:00] | [SYSTEM]: /getuserchats/4 API Called
+[2025-09-24 16:50:53 GMT+5:00] | [SYSTEM]: /getuserchats/4 API Returned
+[2025-09-24 16:51:14 GMT+5:00] | [SYSTEM]: /getuserchats/1 API Called
+[2025-09-24 16:51:16 GMT+5:00] | [SYSTEM]: /getuserchats/1 API Returned
+[2025-09-24 16:58:10 GMT+5:00] | [SYSTEM]: /getuserchats/2 API Called
+[2025-09-24 16:58:12 GMT+5:00] | [SYSTEM]: /getuserchats/2 API Returned

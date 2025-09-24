@@ -32,6 +32,7 @@ interface User {
   userid: string
   username: string
   role: "user" | "admin"
+  password?: string
 }
 
 interface ChatSidebarProps {
@@ -128,33 +129,35 @@ export function ChatSidebar({
           </Button>
         </div>
 
-        <ScrollArea className="flex-1 overflow-hidden">
-          <div className="p-2">
-            {chats.map((chat) => (
-              <Button
-                key={chat.id}
-                variant="ghost"
-                onClick={() => onSelectChat(chat.id)}
-                className={`w-full p-3 mb-1 text-left justify-start h-auto hover:bg-sidebar-accent ${
-                  currentChatId === chat.id ? "bg-sidebar-accent" : ""
-                }`}
-              >
-                <div className="flex items-start gap-3 w-full">
-                  <ChatBubbleLeftIcon className="h-5 w-5 text-sidebar-foreground mt-0.5 flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <h3 className="font-medium text-sidebar-foreground truncate text-sm">{chat.title}</h3>
-                      <span className="text-xs text-muted-foreground flex-shrink-0 ml-2">
-                        {formatTime(chat.timestamp)}
-                      </span>
+        {isLoggedIn && (
+          <ScrollArea className="flex-1 overflow-hidden">
+            <div className="p-2">
+              {chats.map((chat) => (
+                <Button
+                  key={chat.id}
+                  variant="ghost"
+                  onClick={() => onSelectChat(chat.id)}
+                  className={`w-full p-3 mb-1 text-left justify-start h-auto hover:bg-sidebar-accent ${
+                    currentChatId === chat.id ? "bg-sidebar-accent" : ""
+                  }`}
+                >
+                  <div className="flex items-start gap-3 w-full">
+                    <ChatBubbleLeftIcon className="h-5 w-5 text-sidebar-foreground mt-0.5 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <h3 className="font-medium text-sidebar-foreground truncate text-sm">{chat.title}</h3>
+                        <span className="text-xs text-muted-foreground flex-shrink-0 ml-2">
+                          {formatTime(chat.timestamp)}
+                        </span>
+                      </div>
+                      {chat.lastMessage && <p className="text-xs text-muted-foreground truncate">{chat.lastMessage}</p>}
                     </div>
-                    {chat.lastMessage && <p className="text-xs text-muted-foreground truncate">{chat.lastMessage}</p>}
                   </div>
-                </div>
-              </Button>
-            ))}
-          </div>
-        </ScrollArea>
+                </Button>
+              ))}
+            </div>
+          </ScrollArea>
+        )}
 
         {isLoggedIn && user && (
           <div className="p-4 border-t border-sidebar-border flex-shrink-0">

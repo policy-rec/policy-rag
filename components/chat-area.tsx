@@ -40,6 +40,20 @@ export function ChatArea({ currentChatId, chats, isLoggedIn, onLogin, onToggleSi
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
 
+  const escapeHtml = (unsafe: string) => {
+    return unsafe
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+  }
+
+  const formatBasicMarkdown = (text: string) => {
+    const escaped = escapeHtml(text)
+    const withBold = escaped.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    const withLineBreaks = withBold.replace(/\n/g, "<br/>")
+    return withLineBreaks
+  }
+
   useEffect(() => {
     if (currentChatId) {
       const currentChat = chats.find((chat) => chat.id === currentChatId)
@@ -219,7 +233,10 @@ export function ChatArea({ currentChatId, chats, isLoggedIn, onLogin, onToggleSi
                     message.role === "user" ? "bg-primary text-primary-foreground ml-auto" : "bg-muted text-foreground"
                   }`}
                 >
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                  <div
+                    className="text-sm leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: formatBasicMarkdown(message.content) }}
+                  />
                   <p
                     className={`text-xs mt-2 ${
                       message.role === "user" ? "text-primary-foreground/70" : "text-muted-foreground"

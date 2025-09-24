@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 interface LoginModalProps {
   isOpen: boolean
   onClose: () => void
-  onLogin: (username: string, password: string) => boolean
+  onLogin: (username: string, password: string) => Promise<boolean>
 }
 
 export function LoginModal({ isOpen, onClose, onLogin }: LoginModalProps) {
@@ -28,7 +28,7 @@ export function LoginModal({ isOpen, onClose, onLogin }: LoginModalProps) {
     setError("")
 
     try {
-      const success = onLogin(username, password)
+      const success = await onLogin(username, password)
       if (success) {
         setUsername("")
         setPassword("")

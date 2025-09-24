@@ -2,6 +2,7 @@ from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 # from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi.responses import JSONResponse
 from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
 from document_management import Document
 from pydantic import BaseModel
 from database import DBHandler
@@ -16,7 +17,20 @@ import json
 
 load_dotenv()
 
-app = FastAPI()
+app = FastAPI(
+    title="REC Policy API",
+    description="API for REC Policy backend. Test endpoints here.",
+    version="1.0"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # or ["*"] to allow all
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 db = DBHandler()
 llm = LLM()
 doc = Document()
@@ -203,3 +217,4 @@ async def authenticate_endpoint(username: str = Form(...), password: str = Form(
         "userID": user[0],
         "role": user[1],
     }
+

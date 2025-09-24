@@ -10,7 +10,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 interface User {
   userid: string
   username: string
-  password: string
+  password?: string
   role: "user" | "admin"
 }
 
@@ -592,6 +592,33 @@ export default function ChatApp() {
   const [currentChatId, setCurrentChatId] = useState<string | null>(null)
   const [chats, setChats] = useState(sampleChats)
   const [users, setUsers] = useState<User[]>(sampleUsers)
+  const loadUserChats = async (userId: string, username: string) => {
+    try {
+      const res = await fetch(`http://localhost:8000/getuserchats/${userId}`)
+      if (!res.ok) {
+        return
+      }
+      const data: Array<{ message_id: number; sender: string; content: string; timestamp: string }> = await res.json()
+      const messages = data.map((m, idx) => ({
+        id: String(m.message_id ?? idx + 1),
+        content: m.content,
+        role: m.sender === "bot" ? ("assistant" as const) : ("user" as const),
+        timestamp: new Date(m.timestamp),
+      }))
+
+      const newChat = {
+        id: `user-${userId}-chat-1`,
+        title: `${username}'s chat history`,
+        lastMessage: messages.length ? messages[messages.length - 1].content : "",
+        timestamp: messages.length ? messages[messages.length - 1].timestamp : new Date(),
+        conversations: messages,
+      }
+      setChats([newChat])
+      setCurrentChatId(newChat.id)
+    } catch (e) {
+      // silently ignore and keep existing sample chats
+    }
+  }
 
   const getTotalChats = () => {
     // In a real app, this would query the database for all chats across all users
@@ -603,19 +630,43 @@ export default function ChatApp() {
     return simulatedTotalChats
   }
 
-  const handleLogin = (username: string, password: string) => {
-    console.log("[v0] Login attempt:", { username, password })
-    const user = users.find((u) => u.username === username && u.password === password)
-    console.log("[v0] Found user:", user)
-    if (user) {
-      setCurrentUser(user)
-      setIsLoggedIn(true)
-      setShowLoginModal(false)
-      console.log("[v0] Login successful")
-      return true
+  const handleLogin = async (username: string, password: string) => {
+    try {
+      const formData = new FormData()
+      formData.append("username", username)
+      formData.append("password", password)
+
+      const res = await fetch("http://localhost:8000/authenticate", {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!res.ok) {
+        return false
+      }
+
+      const data = await res.json()
+      // Expected response:
+      // { status: "200 OK", userID: number, role: "admin" | "user" }
+      if (data && data.status && String(data.status).startsWith("200")) {
+        const loggedInUser: User = {
+          userid: String(data.userID ?? ""),
+          username,
+          role: data.role === "admin" ? "admin" : "user",
+        }
+        setCurrentUser(loggedInUser)
+        setIsLoggedIn(true)
+        setShowLoginModal(false)
+        // Load user's chat history
+        if (loggedInUser.userid) {
+          loadUserChats(loggedInUser.userid, username)
+        }
+        return true
+      }
+      return false
+    } catch (e) {
+      return false
     }
-    console.log("[v0] Login failed")
-    return false
   }
 
   const handleSignOut = () => {
