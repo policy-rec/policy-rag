@@ -12,6 +12,7 @@ from logger import Logger
 from llm import LLM
 import mimetypes
 import os
+import json
 
 load_dotenv()
 
@@ -147,9 +148,23 @@ def get_user_chats(user_id: int):
     log.logEvent("SYSTEM", f"/getuserchats/{user_id} API Called")
     raw_chat_data = db.get_user_chats(user_id=user_id)
     log.logEvent("SYSTEM", f"/getuserchats/{user_id} API Returned")
-    return raw_chat_data
+    # print(raw_chat_data[0])
+    # json.dumps(raw_chat_data)
+    return raw_chat_data[0]
 
-# 4) GET - get RAG image answers
+
+# 4) GET - get chat msgs by chatid
+@app.get("/getchatmessage/{chat_id}", response_model=list[ChatMessage])
+async def get_chat(chat_id: int):
+    log.logEvent("SYSTEM", f"/getchatmessage/{chat_id} API Called")
+    
+    chat = db.get_msgs_byID(chat_id=chat_id)
+
+    log.logEvent("SYSTEM", f"/getchatmessage/{chat_id} API Returned")
+    return chat
+
+
+# 5) GET - get RAG image answers
 @app.get("/get-image")
 async def get_file(filename: str, inline: bool = False):
     log.logEvent("SYSTEM", "/get-image API Called")

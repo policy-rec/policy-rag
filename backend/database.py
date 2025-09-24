@@ -397,6 +397,7 @@ class DBHandler:
         """Get all chats for a user"""
         with self.Session() as session:
             user = session.query(User).get(user_id)
+            print(user.get_all_chats_data())
             # print(user)
             if user:
                 return user.get_all_chats_data()
@@ -413,7 +414,7 @@ class DBHandler:
         
         log.logEvent("SYSTEM", "Inserted a message to PostgreSQL Database")
 
-    def get_msgs_byID(self, user_id, chat_id):
+    def get_msgs_byID(self, chat_id):
         """Get messages for a specific chat"""
         with self.Session() as session:
             chat = session.query(Chat).filter_by(chat_id=chat_id).first()
@@ -469,10 +470,14 @@ class DBHandler:
 ########################################################################
 
 # db = DBHandler()
+# chat = Chat()
+
+# print(db.get_msgs_byID(1, 2))
+# chat.create_chat()
 
 # db.create_user(username='taha.moiz', password='123', role='admin')
 # print(db.authenticate_user('sahir.mansooo', password='123'))
-# db.
+# db.get_user_chats(1)
 ########################################################################
 ########################################################################
 ########################################################################
