@@ -47,6 +47,7 @@ interface ChatSidebarProps {
   user: User | null
   isSidebarOpen: boolean
   onToggleSidebar: () => void
+  isLoading?: boolean
 }
 
 export function ChatSidebar({
@@ -61,6 +62,7 @@ export function ChatSidebar({
   user,
   isSidebarOpen,
   onToggleSidebar,
+  isLoading,
 }: ChatSidebarProps) {
   const { theme, setTheme } = useTheme()
 
@@ -132,6 +134,9 @@ export function ChatSidebar({
         {isLoggedIn && (
           <ScrollArea className="flex-1 overflow-hidden">
             <div className="p-2">
+              {isLoading && (
+                <div className="px-3 py-2 text-xs text-sidebar-foreground/80">Loading chats…</div>
+              )}
               {chats.map((chat) => (
                 <Button
                   key={chat.id}
@@ -143,14 +148,14 @@ export function ChatSidebar({
                 >
                   <div className="flex items-start gap-3 w-full">
                     <ChatBubbleLeftIcon className="h-5 w-5 text-sidebar-foreground mt-0.5 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 overflow-hidden max-w-full">
                       <div className="flex items-center justify-between mb-1">
-                        <h3 className="font-medium text-sidebar-foreground truncate text-sm">{chat.title}</h3>
+                        <h3 className="font-medium text-sidebar-foreground truncate text-sm flex-1 min-w-0">{chat.title}</h3>
                         <span className="text-xs text-muted-foreground flex-shrink-0 ml-2">
                           {formatTime(chat.timestamp)}
                         </span>
                       </div>
-                      {chat.lastMessage && <p className="text-xs text-muted-foreground truncate">{chat.lastMessage}</p>}
+                      {chat.lastMessage && <p className="text-xs text-muted-foreground w-full overflow-hidden whitespace-nowrap text-ellipsis" style={{maxWidth: '200px'}}>{chat.lastMessage}</p>}
                     </div>
                   </div>
                 </Button>
@@ -171,8 +176,8 @@ export function ChatSidebar({
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0 text-left">
+        
                       <p className="text-sm font-medium text-sidebar-foreground">{user.username}</p>
-                      <p className="text-xs text-muted-foreground">Free plan</p>
                     </div>
                   </div>
                 </Button>

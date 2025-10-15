@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect, useRef } from "react"
 import { ChatSidebar } from "@/components/chat-sidebar"
 import { ChatArea } from "@/components/chat-area"
 import { LoginModal } from "@/components/login-modal"
@@ -12,576 +12,18 @@ interface User {
   username: string
   password?: string
   role: "user" | "admin"
+  is_active?: boolean
 }
 
-const sampleUsers: User[] = [
-  {
-    userid: "1",
-    username: "admin",
-    password: "Admin123!",
-    role: "admin",
-  },
-  {
-    userid: "2",
-    username: "demo",
-    password: "Password123!",
-    role: "user",
-  },
-  {
-    userid: "3",
-    username: "user",
-    password: "User123!",
-    role: "user",
-  },
-  {
-    userid: "4",
-    username: "john_doe",
-    password: "Password123!",
-    role: "user",
-  },
-  {
-    userid: "5",
-    username: "jane_smith",
-    password: "Password456!",
-    role: "user",
-  },
-  {
-    userid: "6",
-    username: "bob_wilson",
-    password: "Password789!",
-    role: "user",
-  },
-  {
-    userid: "7",
-    username: "alice_brown",
-    password: "Password321!",
-    role: "user",
-  },
-]
+function normalizeRole(value: unknown): "user" | "admin" {
+  const v = String(value ?? "").toLowerCase()
+  return v === "admin" ? "admin" : "user"
+}
 
-const sampleChats = [
-  {
-    id: "1",
-    title: "Getting started with AI",
-    lastMessage: "How can I help you today?",
-    timestamp: new Date(Date.now() - 1000 * 60 * 30),
-    conversations: [
-      {
-        id: "1-1",
-        content: "Hello! I'm new to AI. Can you help me understand the basics?",
-        role: "user" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 35),
-      },
-      {
-        id: "1-2",
-        content:
-          "Of course! I'd be happy to help you understand AI basics. AI, or Artificial Intelligence, refers to computer systems that can perform tasks that typically require human intelligence.",
-        role: "assistant" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 34),
-      },
-      {
-        id: "1-3",
-        content: "What are the main types of AI?",
-        role: "user" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 33),
-      },
-      {
-        id: "1-4",
-        content:
-          "There are three main types: Narrow AI (designed for specific tasks), General AI (human-level intelligence), and Super AI (exceeds human intelligence).",
-        role: "assistant" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 32),
-      },
-      {
-        id: "1-5",
-        content: "Can you give me examples of narrow AI?",
-        role: "user" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 31),
-      },
-      {
-        id: "1-6",
-        content:
-          "Examples include voice assistants like Siri, recommendation systems on Netflix, image recognition in photos, and chatbots like me!",
-        role: "assistant" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 30),
-      },
-    ],
-  },
-  {
-    id: "2",
-    title: "React development tips",
-    lastMessage: "Here are some best practices...",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2),
-    conversations: [
-      {
-        id: "2-1",
-        content: "What are the best practices for React development?",
-        role: "user" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2 - 1000 * 60 * 5),
-      },
-      {
-        id: "2-2",
-        content:
-          "Here are some key React best practices: 1) Use functional components with hooks, 2) Keep components small and focused, 3) Use proper state management, 4) Implement error boundaries.",
-        role: "assistant" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2 - 1000 * 60 * 4),
-      },
-      {
-        id: "2-3",
-        content: "How should I structure my React project?",
-        role: "user" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2 - 1000 * 60 * 3),
-      },
-      {
-        id: "2-4",
-        content:
-          "A good structure includes: components/, hooks/, utils/, pages/, and assets/ folders. Group related files together and use index files for cleaner imports.",
-        role: "assistant" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2),
-      },
-    ],
-  },
-  {
-    id: "3",
-    title: "Python programming help",
-    lastMessage: "Let me explain list comprehensions...",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 4),
-    conversations: [
-      {
-        id: "3-1",
-        content: "Can you help me understand Python list comprehensions?",
-        role: "user" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 4 - 1000 * 60 * 10),
-      },
-      {
-        id: "3-2",
-        content:
-          "List comprehensions are a concise way to create lists. The syntax is: [expression for item in iterable if condition]",
-        role: "assistant" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 4 - 1000 * 60 * 9),
-      },
-      {
-        id: "3-3",
-        content: "Can you give me an example?",
-        role: "user" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 4 - 1000 * 60 * 8),
-      },
-      {
-        id: "3-4",
-        content: "Here's an example: squares = [x**2 for x in range(10)] creates a list of squares from 0 to 81.",
-        role: "assistant" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 4),
-      },
-    ],
-  },
-  {
-    id: "4",
-    title: "Machine Learning basics",
-    lastMessage: "Supervised learning involves...",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 6),
-    conversations: [
-      {
-        id: "4-1",
-        content: "What's the difference between supervised and unsupervised learning?",
-        role: "user" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 6 - 1000 * 60 * 15),
-      },
-      {
-        id: "4-2",
-        content:
-          "Supervised learning uses labeled data to train models, while unsupervised learning finds patterns in unlabeled data.",
-        role: "assistant" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 6 - 1000 * 60 * 14),
-      },
-      {
-        id: "4-3",
-        content: "Can you give examples of each?",
-        role: "user" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 6 - 1000 * 60 * 13),
-      },
-      {
-        id: "4-4",
-        content:
-          "Supervised: email spam detection, image classification. Unsupervised: customer segmentation, anomaly detection.",
-        role: "assistant" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 6),
-      },
-    ],
-  },
-  {
-    id: "5",
-    title: "Web design principles",
-    lastMessage: "Good design follows these principles...",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 8),
-    conversations: [
-      {
-        id: "5-1",
-        content: "What are the fundamental principles of good web design?",
-        role: "user" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 8 - 1000 * 60 * 20),
-      },
-      {
-        id: "5-2",
-        content:
-          "Key principles include: visual hierarchy, consistency, simplicity, accessibility, and responsive design.",
-        role: "assistant" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 8 - 1000 * 60 * 19),
-      },
-      {
-        id: "5-3",
-        content: "How do I create good visual hierarchy?",
-        role: "user" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 8 - 1000 * 60 * 18),
-      },
-      {
-        id: "5-4",
-        content:
-          "Use size, color, contrast, and spacing to guide the user's eye. Most important elements should be largest and most prominent.",
-        role: "assistant" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 8),
-      },
-    ],
-  },
-  {
-    id: "6",
-    title: "JavaScript ES6 features",
-    lastMessage: "Arrow functions are great for...",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 12),
-    conversations: [
-      {
-        id: "6-1",
-        content: "What are the most important ES6 features I should know?",
-        role: "user" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 12 - 1000 * 60 * 25),
-      },
-      {
-        id: "6-2",
-        content:
-          "Key ES6 features: arrow functions, destructuring, template literals, const/let, classes, modules, and promises.",
-        role: "assistant" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 12 - 1000 * 60 * 24),
-      },
-      {
-        id: "6-3",
-        content: "Can you explain destructuring?",
-        role: "user" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 12 - 1000 * 60 * 23),
-      },
-      {
-        id: "6-4",
-        content:
-          "Destructuring lets you extract values from arrays/objects: const {name, age} = person; const [first, second] = array;",
-        role: "assistant" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 12),
-      },
-    ],
-  },
-  {
-    id: "7",
-    title: "Database design concepts",
-    lastMessage: "Normalization helps reduce redundancy...",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24),
-    conversations: [
-      {
-        id: "7-1",
-        content: "What is database normalization?",
-        role: "user" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 - 1000 * 60 * 30),
-      },
-      {
-        id: "7-2",
-        content:
-          "Normalization is organizing data to reduce redundancy and improve data integrity through normal forms (1NF, 2NF, 3NF).",
-        role: "assistant" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 - 1000 * 60 * 29),
-      },
-      {
-        id: "7-3",
-        content: "What's the difference between SQL and NoSQL?",
-        role: "user" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 - 1000 * 60 * 28),
-      },
-      {
-        id: "7-4",
-        content:
-          "SQL databases are relational with fixed schemas, while NoSQL databases are flexible with various data models (document, key-value, graph).",
-        role: "assistant" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24),
-      },
-    ],
-  },
-  {
-    id: "8",
-    title: "CSS Grid vs Flexbox",
-    lastMessage: "Use Grid for 2D layouts...",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 36),
-    conversations: [
-      {
-        id: "8-1",
-        content: "When should I use CSS Grid vs Flexbox?",
-        role: "user" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 36 - 1000 * 60 * 35),
-      },
-      {
-        id: "8-2",
-        content:
-          "Use Flexbox for 1D layouts (rows or columns) and CSS Grid for 2D layouts (rows and columns together).",
-        role: "assistant" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 36 - 1000 * 60 * 34),
-      },
-      {
-        id: "8-3",
-        content: "Can you give me a practical example?",
-        role: "user" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 36 - 1000 * 60 * 33),
-      },
-      {
-        id: "8-4",
-        content:
-          "Flexbox: navigation bars, centering items. Grid: page layouts, card grids, complex responsive designs.",
-        role: "assistant" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 36),
-      },
-    ],
-  },
-  {
-    id: "9",
-    title: "API design best practices",
-    lastMessage: "RESTful APIs should follow...",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 48),
-    conversations: [
-      {
-        id: "9-1",
-        content: "What are REST API best practices?",
-        role: "user" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 48 - 1000 * 60 * 40),
-      },
-      {
-        id: "9-2",
-        content:
-          "Key practices: use HTTP methods correctly, meaningful URLs, consistent naming, proper status codes, and versioning.",
-        role: "assistant" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 48 - 1000 * 60 * 39),
-      },
-      {
-        id: "9-3",
-        content: "How should I handle errors in APIs?",
-        role: "user" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 48 - 1000 * 60 * 38),
-      },
-      {
-        id: "9-4",
-        content:
-          "Return appropriate HTTP status codes (400, 404, 500) with descriptive error messages in a consistent format.",
-        role: "assistant" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 48),
-      },
-    ],
-  },
-  {
-    id: "10",
-    title: "Git workflow strategies",
-    lastMessage: "Feature branches help organize...",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 72),
-    conversations: [
-      {
-        id: "10-1",
-        content: "What's the best Git workflow for a team?",
-        role: "user" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 72 - 1000 * 60 * 45),
-      },
-      {
-        id: "10-2",
-        content:
-          "Popular workflows include Git Flow, GitHub Flow, and GitLab Flow. GitHub Flow is simpler: main branch + feature branches + pull requests.",
-        role: "assistant" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 72 - 1000 * 60 * 44),
-      },
-      {
-        id: "10-3",
-        content: "How do I write good commit messages?",
-        role: "user" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 72 - 1000 * 60 * 43),
-      },
-      {
-        id: "10-4",
-        content:
-          "Use imperative mood, keep first line under 50 chars, explain 'what' and 'why' not 'how'. Example: 'Add user authentication middleware'",
-        role: "assistant" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 72),
-      },
-    ],
-  },
-  {
-    id: "11",
-    title: "TypeScript benefits",
-    lastMessage: "Type safety prevents many bugs...",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 96),
-    conversations: [
-      {
-        id: "11-1",
-        content: "Why should I use TypeScript over JavaScript?",
-        role: "user" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 96 - 1000 * 60 * 50),
-      },
-      {
-        id: "11-2",
-        content:
-          "TypeScript adds static typing, better IDE support, early error detection, improved refactoring, and better documentation through types.",
-        role: "assistant" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 96 - 1000 * 60 * 49),
-      },
-      {
-        id: "11-3",
-        content: "Is there a learning curve?",
-        role: "user" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 96 - 1000 * 60 * 48),
-      },
-      {
-        id: "11-4",
-        content:
-          "Yes, but it's gradual. You can start by adding basic types and gradually learn advanced features like generics and utility types.",
-        role: "assistant" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 96),
-      },
-    ],
-  },
-  {
-    id: "12",
-    title: "Performance optimization",
-    lastMessage: "Lazy loading can improve...",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 120),
-    conversations: [
-      {
-        id: "12-1",
-        content: "How can I optimize my web app's performance?",
-        role: "user" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 120 - 1000 * 60 * 55),
-      },
-      {
-        id: "12-2",
-        content:
-          "Key strategies: minimize bundle size, lazy loading, image optimization, caching, CDN usage, and code splitting.",
-        role: "assistant" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 120 - 1000 * 60 * 54),
-      },
-      {
-        id: "12-3",
-        content: "What tools can help measure performance?",
-        role: "user" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 120 - 1000 * 60 * 53),
-      },
-      {
-        id: "12-4",
-        content: "Use Lighthouse, WebPageTest, Chrome DevTools, and bundle analyzers like webpack-bundle-analyzer.",
-        role: "assistant" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 120),
-      },
-    ],
-  },
-  {
-    id: "13",
-    title: "Security best practices",
-    lastMessage: "Always validate user input...",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 144),
-    conversations: [
-      {
-        id: "13-1",
-        content: "What are essential web security practices?",
-        role: "user" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 144 - 1000 * 60 * 60),
-      },
-      {
-        id: "13-2",
-        content:
-          "Key practices: input validation, HTTPS, authentication, authorization, CSRF protection, XSS prevention, and regular updates.",
-        role: "assistant" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 144 - 1000 * 60 * 59),
-      },
-      {
-        id: "13-3",
-        content: "How do I prevent SQL injection?",
-        role: "user" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 144 - 1000 * 60 * 58),
-      },
-      {
-        id: "13-4",
-        content:
-          "Use parameterized queries, prepared statements, and ORM frameworks. Never concatenate user input directly into SQL queries.",
-        role: "assistant" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 144),
-      },
-    ],
-  },
-  {
-    id: "14",
-    title: "Mobile app development",
-    lastMessage: "React Native allows...",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 168),
-    conversations: [
-      {
-        id: "14-1",
-        content: "Should I choose React Native or native development?",
-        role: "user" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 168 - 1000 * 60 * 65),
-      },
-      {
-        id: "14-2",
-        content:
-          "React Native: faster development, code sharing, good performance. Native: best performance, platform-specific features, larger team needed.",
-        role: "assistant" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 168 - 1000 * 60 * 64),
-      },
-      {
-        id: "14-3",
-        content: "What about Flutter?",
-        role: "user" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 168 - 1000 * 60 * 63),
-      },
-      {
-        id: "14-4",
-        content:
-          "Flutter offers excellent performance, single codebase, and great UI consistency. Consider it if you're comfortable with Dart.",
-        role: "assistant" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 168),
-      },
-    ],
-  },
-  {
-    id: "15",
-    title: "Cloud computing basics",
-    lastMessage: "AWS, Azure, and GCP offer...",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 192),
-    conversations: [
-      {
-        id: "15-1",
-        content: "What's the difference between IaaS, PaaS, and SaaS?",
-        role: "user" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 192 - 1000 * 60 * 70),
-      },
-      {
-        id: "15-2",
-        content:
-          "IaaS: Infrastructure (servers, storage), PaaS: Platform (runtime, databases), SaaS: Software (complete applications).",
-        role: "assistant" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 192 - 1000 * 60 * 69),
-      },
-      {
-        id: "15-3",
-        content: "Which cloud provider should I choose?",
-        role: "user" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 192 - 1000 * 60 * 68),
-      },
-      {
-        id: "15-4",
-        content:
-          "AWS has the most services, Azure integrates well with Microsoft tools, GCP excels in AI/ML and data analytics. Choose based on your needs.",
-        role: "assistant" as const,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 192),
-      },
-    ],
-  },
-]
+function truncateText(text: string, maxLength = 80) {
+  if (!text) return ""
+  return text.length > maxLength ? text.slice(0, maxLength - 1) + "…" : text
+}
 
 export default function ChatApp() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -590,33 +32,141 @@ export default function ChatApp() {
   const [showAdminPage, setShowAdminPage] = useState(false)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [currentChatId, setCurrentChatId] = useState<string | null>(null)
-  const [chats, setChats] = useState(sampleChats)
-  const [users, setUsers] = useState<User[]>(sampleUsers)
-  const loadUserChats = async (userId: string, username: string) => {
+  const [chats, setChats] = useState<{ id: string; title: string; lastMessage: string; timestamp: Date; conversations: { id: string; content: string; role: "user" | "assistant"; timestamp: Date }[] }[]>([])
+  const [users, setUsers] = useState<User[]>([])
+  const [adminTotalChats, setAdminTotalChats] = useState<number | null>(null)
+  const [adminUserFrequency, setAdminUserFrequency] = useState<Array<{ name: string; users: number }> | null>(null)
+  const [pendingNewChatId, setPendingNewChatId] = useState<string | null>(null)
+  const [focusInputSignal, setFocusInputSignal] = useState(0)
+  const [isChatsLoading, setIsChatsLoading] = useState(false)
+  const [isMessagesLoading, setIsMessagesLoading] = useState(false)
+  const [usernewchat, setUsernewchat] = useState("")
+  const firstCreateLockRef = useRef(false)
+  const createdChatIdRef = useRef<string | null>(null)
+
+  // Restore user session on page load
+  useEffect(() => {
+    const savedUser = localStorage.getItem('currentUser')
+    const savedLoginState = localStorage.getItem('isLoggedIn')
+    
+    if (savedUser && savedLoginState === 'true') {
+      try {
+        const user = JSON.parse(savedUser)
+        setCurrentUser(user)
+        setIsLoggedIn(true)
+        // Load user's chats
+        if (user.userid) {
+          loadUserChats(user.userid)
+        }
+      } catch (e) {
+        // Clear invalid data
+        localStorage.removeItem('currentUser')
+        localStorage.removeItem('isLoggedIn')
+      }
+    }
+  }, [])
+
+  // Save user session when it changes
+  useEffect(() => {
+    if (currentUser && isLoggedIn) {
+      localStorage.setItem('currentUser', JSON.stringify(currentUser))
+      localStorage.setItem('isLoggedIn', 'true')
+    } else {
+      localStorage.removeItem('currentUser')
+      localStorage.removeItem('isLoggedIn')
+    }
+  }, [currentUser, isLoggedIn])
+  
+  // When drafting a new local chat, reflect the first message as the sidebar heading and lastMessage
+  useEffect(() => {
+    if (currentChatId && currentChatId.startsWith("local-") && usernewchat.trim()) {
+      const truncatedTitle = truncateText(usernewchat, 20)
+      const truncatedLast = truncateText(usernewchat)
+      console.log("[NEW CHAT][truncatedTitle]", truncatedTitle)
+      console.log("[NEW CHAT][truncatedLast]", truncatedLast)
+      setChats((prev) =>
+        prev.map((c) =>
+          c.id === currentChatId
+            ? {
+                ...c,
+                title: truncatedTitle,
+                lastMessage: truncatedLast,
+                timestamp: new Date(),
+              }
+            : c,
+        ),
+      )
+    }
+  }, [usernewchat, currentChatId])
+  const loadUserChats = async (
+    userId: string,
+    options?: { preserveSelection?: boolean },
+  ) => {
     try {
-      const res = await fetch(`http://localhost:8000/getuserchats/${userId}`)
+      setIsChatsLoading(true)
+      const res = await fetch(`https://backend-ltzf.onrender.com/getuserchats?user_id=${encodeURIComponent(userId)}`)
+      if (!res.ok) {
+        return [] as {
+          id: string
+          title: string
+          lastMessage: string
+          timestamp: Date
+          conversations: { id: string; content: string; role: "user" | "assistant"; timestamp: Date }[]
+        }[]
+      }
+      const data: Array<{ chat_id: number; chat_name: string; last_msg: string; timestamp: string }> = await res.json()
+      const fetchedChats = data.map((c) => ({
+        id: String(c.chat_id),
+        title: truncateText(c.chat_name ?? "", 20),
+        lastMessage: truncateText(c.last_msg ?? ""),
+        timestamp: new Date(c.timestamp),
+        conversations: [] as { id: string; content: string; role: "user" | "assistant"; timestamp: Date }[],
+      }))
+      setChats(fetchedChats)
+      if (!options?.preserveSelection) {
+        setCurrentChatId(fetchedChats[0]?.id ?? null)
+      }
+      return fetchedChats
+    } catch (e) {
+      // silently ignore and keep existing sample chats
+      return [] as any
+    } finally {
+      setIsChatsLoading(false)
+    }
+  }
+
+  const loadChatMessages = async (chatId: string) => {
+    setIsMessagesLoading(true)
+    try {
+      const res = await fetch(`https://backend-ltzf.onrender.com/getchatmessages?chat_id=${encodeURIComponent(chatId)}`)
       if (!res.ok) {
         return
       }
-      const data: Array<{ message_id: number; sender: string; content: string; timestamp: string }> = await res.json()
+      const data: Array<{ sender: string; content: string; timestamp: string }> = await res.json()
       const messages = data.map((m, idx) => ({
-        id: String(m.message_id ?? idx + 1),
+        id: String(idx + 1),
         content: m.content,
         role: m.sender === "bot" ? ("assistant" as const) : ("user" as const),
         timestamp: new Date(m.timestamp),
       }))
 
-      const newChat = {
-        id: `user-${userId}-chat-1`,
-        title: `${username}'s chat history`,
-        lastMessage: messages.length ? messages[messages.length - 1].content : "",
-        timestamp: messages.length ? messages[messages.length - 1].timestamp : new Date(),
+      // Update the specific chat with its messages
+      setChats((prevChats) =>
+        prevChats.map((chat) =>
+          chat.id === chatId
+            ? {
+                ...chat,
         conversations: messages,
+                lastMessage: truncateText(messages.length ? messages[messages.length - 1].content : ""),
+        timestamp: messages.length ? messages[messages.length - 1].timestamp : new Date(),
       }
-      setChats([newChat])
-      setCurrentChatId(newChat.id)
+            : chat,
+        ),
+      )
     } catch (e) {
-      // silently ignore and keep existing sample chats
+      // silently ignore errors
+    } finally {
+      setIsMessagesLoading(false)
     }
   }
 
@@ -635,20 +185,19 @@ export default function ChatApp() {
       const formData = new FormData()
       formData.append("username", username)
       formData.append("password", password)
-
-      const res = await fetch("http://localhost:8000/authenticate", {
+      const res = await fetch("https://backend-ltzf.onrender.com/authenticate", {
         method: "POST",
         body: formData,
       })
-
-      if (!res.ok) {
+      console.log(res.status)
+     if (!res.ok ) {
         return false
       }
 
       const data = await res.json()
       // Expected response:
       // { status: "200 OK", userID: number, role: "admin" | "user" }
-      if (data && data.status && String(data.status).startsWith("200")) {
+      if ((data && data.status === "200 OK") || (data && data.message === "User authentication successful") ){
         const loggedInUser: User = {
           userid: String(data.userID ?? ""),
           username,
@@ -657,9 +206,9 @@ export default function ChatApp() {
         setCurrentUser(loggedInUser)
         setIsLoggedIn(true)
         setShowLoginModal(false)
-        // Load user's chat history
+        // Load user's chats list
         if (loggedInUser.userid) {
-          loadUserChats(loggedInUser.userid, username)
+          loadUserChats(loggedInUser.userid)
         }
         return true
       }
@@ -674,39 +223,155 @@ export default function ChatApp() {
     setCurrentUser(null)
     setCurrentChatId(null)
     setShowAdminPage(false)
+    setPendingNewChatId(null)
   }
 
-  const handleAdminPage = () => {
+  const handleAdminPage = async () => {
     setShowAdminPage(true)
     setIsSidebarOpen(false)
+    try {
+      const res = await fetch("https://backend-ltzf.onrender.com/get-all-users")
+      if (!res.ok) return
+      const data: {
+        users: Array<{ user_id: number; username: string; role: string; last_login?: string }>
+        total_users: number
+        total_chats: number
+      } = await res.json()
+      const mappedUsers: User[] = data.users.map((u) => ({
+        userid: String(u.user_id),
+        username: u.username,
+        role: u.role === "admin" ? "admin" : "user",
+        is_active: (u as any).is_active ?? true,
+      }))
+      setUsers(mappedUsers)
+      setAdminTotalChats(typeof data.total_chats === "number" ? data.total_chats : mappedUsers.length)
+
+      // Build user activity frequency by month from last_login
+      const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+      const counts = new Array(12).fill(0)
+      for (const u of data.users) {
+        if (u.last_login) {
+          const d = new Date(u.last_login)
+          if (!isNaN(d.getTime())) {
+            counts[d.getMonth()] += 1
+          }
+        }
+      }
+      const freq = counts.map((c, i) => ({ name: months[i], users: c }))
+      setAdminUserFrequency(freq)
+    } catch (e) {
+      // ignore; keep existing users and simulated total
+    }
   }
 
   const handleBackToChat = () => {
     setShowAdminPage(false)
   }
 
-  const handleCreateUser = (userData: Omit<User, "userid">) => {
-    const newUser: User = {
-      ...userData,
-      userid: Date.now().toString(),
+  const handleCreateUser = (userData: Omit<User, "userid"> | undefined | null) => {
+    if (!userData || !userData.username || userData.password === undefined || !userData.role) {
+      return
     }
-    setUsers([...users, newUser])
+    // Optimistically add while also creating on backend
+    const tempUser: User = { ...userData, userid: Date.now().toString(), role: normalizeRole(userData.role) }
+    setUsers((prev) => [tempUser, ...prev])
+
+    void (async () => {
+      try {
+        const body = new URLSearchParams()
+        const roleValue = normalizeRole(userData.role)
+        const passwordValue = String(userData.password ?? "")
+        body.set("Username", userData.username)
+        body.set("username", userData.username)
+        body.set("password", passwordValue)
+        body.set("Role", roleValue)
+        body.set("role", roleValue)
+
+        const res = await fetch("https://backend-ltzf.onrender.com/create-user", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body,
+        })
+        if (!res.ok) return
+
+        // Refresh users and totals from backend for accuracy
+        const allRes = await fetch("https://backend-ltzf.onrender.com/get-all-users")
+        if (!allRes.ok) return
+        const data: {
+          users: Array<{ user_id: number; username: string; role: string; last_login?: string }>
+          total_users: number
+          total_chats: number
+        } = await allRes.json()
+        const mappedUsers: User[] = data.users.map((u) => ({
+          userid: String(u.user_id),
+          username: u.username,
+          role: u.role === "admin" ? "admin" : "user",
+          is_active: (u as any).is_active ?? true,
+        }))
+        setUsers(mappedUsers)
+        setAdminTotalChats(typeof data.total_chats === "number" ? data.total_chats : mappedUsers.length)
+
+        // Recompute activity frequency as well
+        const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+        const counts = new Array(12).fill(0)
+        for (const u of data.users) {
+          if (u.last_login) {
+            const d = new Date(u.last_login)
+            if (!isNaN(d.getTime())) counts[d.getMonth()] += 1
+          }
+        }
+        const freq = counts.map((c, i) => ({ name: months[i], users: c }))
+        setAdminUserFrequency(freq)
+      } catch (e) {
+        // ignore network errors; UI already shows optimistic item
+      }
+    })()
   }
 
-  const handleUpdateUser = (userid: string, userData: Partial<User>) => {
-    setUsers(users.map((user) => (user.userid === userid ? { ...user, ...userData } : user)))
+  const handleUpdateUser = async (userid: string, userData: Partial<User>) => {
+    // Update local state optimistically
+    setUsers(users.map((user) => (user.userid === userid ? { ...user, ...userData, role: normalizeRole(userData.role) } : user)))
+
+    // Send to backend using the new change-user-details endpoint
+    try {
+      const body = new URLSearchParams()
+      body.set("userID", userid)
+      body.set("role", normalizeRole(userData.role))
+      body.set("password", String(userData.password ?? ""))
+
+      const res = await fetch("https://backend-ltzf.onrender.com/change-user-details", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body,
+      })
+      
+      if (!res.ok) {
+        console.error("Failed to update user:", res.status)
+      }
+    } catch (e) {
+      console.error("Error updating user:", e)
+      // ignore network errors for now; UI already updated
+    }
   }
 
   const handleDeleteUser = (userid: string) => {
     if (currentUser && currentUser.userid === userid) {
-      return // Silently prevent deletion
+      return // Silently prevent deletion of current user
     }
+    
+    // Find the user to check if they are admin
+    const userToDelete = users.find(user => user.userid === userid)
+    if (userToDelete && userToDelete.role === "admin") {
+      alert("Admin users cannot be deleted!")
+      return
+    }
+    
     setUsers(users.filter((user) => user.userid !== userid))
   }
 
-  const handleNewChat = () => {
+  const handleNewChat = async () => {
     const newChat = {
-      id: Date.now().toString(),
+      id: `local-${Date.now()}`,
       title: "New conversation",
       lastMessage: "",
       timestamp: new Date(),
@@ -715,11 +380,65 @@ export default function ChatApp() {
     setChats([newChat, ...chats])
     setCurrentChatId(newChat.id)
     setIsSidebarOpen(false)
+    setUsernewchat("")
+    // Signal ChatArea to focus the message input
+    setFocusInputSignal((n) => n + 1)
   }
+
+  // Promote a local chat to a server chat: create on backend, update sidebar, and return server chat id
+  const handlePromoteLocalChat = useCallback(
+    async (localChatId: string, chatTitle: string): Promise<string | null> => {
+      if (!currentUser?.userid) return null
+      try {
+        const body = new URLSearchParams()
+        body.set("userID", String(currentUser.userid))
+        body.set("chat_name", chatTitle)
+        const res = await fetch("https://backend-ltzf.onrender.com/create-chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body,
+        })
+        if (!res.ok) return null
+        let serverId: string | null = null
+        try {
+          const json = await res.clone().json()
+          serverId = json?.chat?.chat_id ? String(json.chat.chat_id) : null
+        } catch {}
+        // Fallback: fetch list and pick newest if id not in response
+        if (!serverId) {
+          const list = await fetch(`https://backend-ltzf.onrender.com/getuserchats?user_id=${encodeURIComponent(currentUser.userid)}`)
+          if (list.ok) {
+            const data: Array<{ chat_id: number; chat_name: string; last_msg: string; timestamp: string }> = await list.json()
+            if (data.length) {
+              const newest = data.reduce((latest, c) => (new Date(c.timestamp) > new Date(latest.timestamp) ? c : latest), data[0])
+              serverId = String(newest.chat_id)
+            }
+          }
+        }
+        if (!serverId) return null
+        // Update local placeholder to server id and title (truncate to 20 for heading)
+        const truncated = truncateText(chatTitle, 20)
+        setChats((prev) =>
+          prev.map((c) =>
+            c.id === localChatId
+              ? { ...c, id: serverId!, title: truncated, lastMessage: truncateText(usernewchat || chatTitle), timestamp: new Date() }
+              : c,
+          ),
+        )
+        setCurrentChatId(serverId)
+        return serverId
+      } catch {
+        return null
+      }
+    },
+    [currentUser?.userid, usernewchat],
+  )
 
   const handleSelectChat = (chatId: string) => {
     setCurrentChatId(chatId)
     setIsSidebarOpen(false)
+    // Load messages for the selected chat
+    loadChatMessages(chatId)
   }
 
   const handleUpdateChat = useCallback(
@@ -730,7 +449,7 @@ export default function ChatApp() {
             ? {
                 ...chat,
                 conversations: newMessages,
-                lastMessage: newMessages[newMessages.length - 1]?.content || "",
+                lastMessage: truncateText(newMessages[newMessages.length - 1]?.content || ""),
                 timestamp: new Date(),
               }
             : chat,
@@ -746,12 +465,49 @@ export default function ChatApp() {
         {showAdminPage ? (
           <AdminPage
             users={users}
-            totalChats={getTotalChats()} // Use calculated total instead of just chats.length
+            totalChats={adminTotalChats ?? getTotalChats()}
             currentUser={currentUser}
             onCreateUser={handleCreateUser}
             onUpdateUser={handleUpdateUser}
             onDeleteUser={handleDeleteUser}
             onBackToChat={handleBackToChat}
+            userFrequencyData={adminUserFrequency ?? undefined}
+            onToggleActive={async (userid, makeActive) => {
+              // Find the user to check if they are admin
+              const userToToggle = users.find(u => u.userid === userid)
+              if (userToToggle && userToToggle.role === "admin") {
+                alert("Admin users cannot be deactivated!")
+                return
+              }
+              
+              // optimistic update
+              setUsers((prev) => prev.map(u => u.userid === userid ? { ...u, is_active: makeActive } : u))
+              try {
+                const body = new URLSearchParams()
+                // Send both casings to satisfy backend variations
+                body.set("UserId", userid)
+                body.set("userID", userid)
+                const endpoint = makeActive ? "activate-user" : "deactivate-user"
+                const res = await fetch(`https://backend-ltzf.onrender.com/${endpoint}`, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body })
+                if (!res.ok) return
+                // Refresh users to sync is_active
+                const allRes = await fetch("https://backend-ltzf.onrender.com/get-all-users")
+                if (!allRes.ok) return
+                const data: {
+                  users: Array<{ user_id: number; username: string; role: string; last_login?: string; is_active?: boolean }>
+                  total_users: number
+                  total_chats: number
+                } = await allRes.json()
+                const mappedUsers: User[] = data.users.map((u) => ({
+                  userid: String(u.user_id),
+                  username: u.username,
+                  role: u.role === "admin" ? "admin" : "user",
+                  is_active: (u as any).is_active ?? true,
+                }))
+                setUsers(mappedUsers)
+                setAdminTotalChats(typeof data.total_chats === "number" ? data.total_chats : mappedUsers.length)
+              } catch {}
+            }}
           />
         ) : (
           <>
@@ -775,6 +531,11 @@ export default function ChatApp() {
               onLogin={() => setShowLoginModal(true)}
               onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
               onUpdateChat={handleUpdateChat}
+              userId={currentUser?.userid || undefined}
+              focusInputSignal={focusInputSignal}
+              messagesLoading={isMessagesLoading}
+              setUsernewchat={setUsernewchat}
+              promoteLocalChat={handlePromoteLocalChat}
             />
           </>
         )}

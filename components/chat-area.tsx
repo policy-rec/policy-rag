@@ -30,9 +30,16 @@ interface ChatAreaProps {
   onLogin: () => void
   onToggleSidebar: () => void
   onUpdateChat: (chatId: string, messages: Message[]) => void // Added callback prop
+  userId?: string
+  focusInputSignal?: number
+  messagesLoading?: boolean
+  // Persist user's draft for local-only new chat
+  setUsernewchat?: (value: string) => void
+  // Promote a local chat to server chat (create-chat) and return server id
+  promoteLocalChat?: (localChatId: string, chatTitle: string) => Promise<string | null>
 }
 
-export function ChatArea({ currentChatId, chats, isLoggedIn, onLogin, onToggleSidebar, onUpdateChat }: ChatAreaProps) {
+export function ChatArea({ currentChatId, chats, isLoggedIn, onLogin, onToggleSidebar, onUpdateChat, userId, focusInputSignal, messagesLoading, setUsernewchat, promoteLocalChat }: ChatAreaProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -49,7 +56,9 @@ export function ChatArea({ currentChatId, chats, isLoggedIn, onLogin, onToggleSi
 
   const formatBasicMarkdown = (text: string) => {
     const escaped = escapeHtml(text)
-    const withBold = escaped.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    // Basic support for markdown headings: lines starting with ### become bold headings
+    const withHeadings = escaped.replace(/^###\s+(.+)$/gm, "<strong>$1</strong>")
+    const withBold = withHeadings.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
     const withLineBreaks = withBold.replace(/\n/g, "<br/>")
     return withLineBreaks
   }
@@ -57,23 +66,22 @@ export function ChatArea({ currentChatId, chats, isLoggedIn, onLogin, onToggleSi
   useEffect(() => {
     if (currentChatId) {
       const currentChat = chats.find((chat) => chat.id === currentChatId)
-      if (currentChat && currentChat.conversations) {
-        setMessages(currentChat.conversations)
-      } else {
-        // Fallback to default message if no conversations
-        setMessages([
-          {
-            id: "1",
-            content: "Hello! How can I help you today?",
-            role: "assistant",
-            timestamp: new Date(Date.now() - 1000 * 60 * 5),
-          },
-        ])
-      }
+    if (currentChat && currentChat.conversations) {
+      setMessages(currentChat.conversations)
+    } else {
+      setMessages([])
+    }
     } else {
       setMessages([])
     }
   }, [currentChatId, chats])
+
+  // Focus input when page asks (e.g., after New chat)
+  useEffect(() => {
+    if (focusInputSignal && textareaRef.current) {
+      textareaRef.current.focus()
+    }
+  }, [focusInputSignal])
 
   const handleScroll = () => {
     if (scrollAreaRef.current) {
@@ -108,41 +116,96 @@ export function ChatArea({ currentChatId, chats, isLoggedIn, onLogin, onToggleSi
     setMessages(newMessages)
     if (currentChatId) {
       onUpdateChat(currentChatId, newMessages)
+      // Notify parent that first message is sent for this chat with text
+   
     }
 
     const messageContent = inputValue
+    if (setUsernewchat && (!currentChatId || /^local-/.test(currentChatId))) {
+      setUsernewchat(messageContent)
+      console.log("[NEW CHAT][usernewchat]", messageContent)
+    }
     setInputValue("")
     setIsLoading(true)
 
     try {
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          message: messageContent,
-          chatId: currentChatId,
-        }),
-      })
+      let effectiveChatId = currentChatId
+      // If this is a local-only chat, promote it using the first message as title
+      if ((!effectiveChatId || /^local-/.test(effectiveChatId)) && promoteLocalChat) {
+        const title = userMessage.content.trim()
+        const serverId = await promoteLocalChat(effectiveChatId || `local-${Date.now()}`, title)
+        if (serverId) {
+          effectiveChatId = serverId
+        }
+      }
 
+      // Call backend chat endpoint with form data
+      // Only send when chat id is a server numeric id. 'local-*' placeholders should not send.
+      const numericChatId = effectiveChatId && /^\d+$/.test(effectiveChatId) ? effectiveChatId : ""
+      if (!numericChatId) {
+        // Could not resolve a backend chat id yet; avoid sending to prevent duplicate chat creation
+        setIsLoading(false)
+        return
+      }
+      // Backend expects application/x-www-form-urlencoded
+      const body = new URLSearchParams()
+      if (userId) body.set("userID", String(userId))
+      if (numericChatId) body.set("chatID", String(numericChatId))
+      body.set("text", messageContent)
+
+      console.log("[CHAT SEND] userID=", userId, "chatID=", numericChatId, "text=", messageContent)
+      const response = await fetch("https://backend-ltzf.onrender.com/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body,
+      })
+      console.log("[CHAT SEND][RESP] status=", response.status, "ok=", response.ok)
+      try {
+        const debugPayload = await response.clone().json()
+        console.log("[CHAT SEND][RESP JSON]", debugPayload)
+      } catch (e) {
+        try {
+          const debugText = await response.clone().text()
+          console.log("[CHAT SEND][RESP TEXT]", debugText)
+        } catch {}
+      }
+      debugger;
+      
       if (!response.ok) {
         throw new Error("Failed to get response")
       }
 
-      const data = await response.json()
-
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: data.message,
-        role: "assistant",
-        timestamp: new Date(),
-      }
-
-      const finalMessages = [...newMessages, assistantMessage]
-      setMessages(finalMessages)
-      if (currentChatId) {
-        onUpdateChat(currentChatId, finalMessages)
+      // Sync messages with backend to ensure persistence (tolerate eventual consistency)
+      try {
+        const maxAttempts = 3
+        const delay = (ms: number) => new Promise((r) => setTimeout(r, ms))
+        let synced: Message[] | null = null
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+          const msgRes = await fetch(`https://backend-ltzf.onrender.com/getchatmessages?chat_id=${encodeURIComponent(numericChatId)}`)
+          if (msgRes.ok) {
+            const data: Array<{ sender: string; content: string; timestamp: string }> = await msgRes.json()
+            const serverMessages = data.map((m, idx) => ({
+              id: String(idx + 1),
+              content: m.content,
+              role: m.sender === "bot" ? ("assistant" as const) : ("user" as const),
+              timestamp: new Date(m.timestamp),
+            }))
+            // If server already contains the just-sent user message, accept it; else retry once
+            const containsUser = serverMessages.some((m) => m.content === userMessage.content)
+            if (containsUser || attempt === maxAttempts - 1) {
+              synced = serverMessages
+              break
+            }
+          }
+          await delay(350)
+        }
+        if (synced) {
+          // Merge if server list is missing the optimistic assistant response
+          setMessages(synced)
+          if (effectiveChatId) onUpdateChat(effectiveChatId, synced)
+        }
+      } catch {
+        // ignore sync errors; UI already shows user message
       }
     } catch (error) {
       console.error("Error sending message:", error)
@@ -161,6 +224,12 @@ export function ChatArea({ currentChatId, chats, isLoggedIn, onLogin, onToggleSi
       setIsLoading(false)
     }
   }
+  // Focus input when signal changes (e.g., after creating a new chat)
+  useEffect(() => {
+    if (focusInputSignal && textareaRef.current) {
+      textareaRef.current.focus()
+    }
+  }, [focusInputSignal])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -215,6 +284,17 @@ export function ChatArea({ currentChatId, chats, isLoggedIn, onLogin, onToggleSi
       <div className="flex-1 overflow-hidden">
         <div className="h-full overflow-y-auto p-2 sm:p-4" ref={scrollAreaRef} onScroll={handleScroll}>
           <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6">
+            {messagesLoading && (
+              <div className="flex gap-2 sm:gap-4 justify-start">
+                <div className="bg-muted text-foreground rounded-lg p-3 sm:p-4">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: "0.1s" }}></div>
+                    <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: "0.2s" }}></div>
+                  </div>
+                </div>
+              </div>
+            )}
             {messages.map((message) => (
               <div
                 key={message.id}

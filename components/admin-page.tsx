@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -29,8 +29,9 @@ import {
 interface User {
   userid: string
   username: string
-  password: string
+  password?: string
   role: "user" | "admin"
+  is_active?: boolean
 }
 
 interface AdminPageProps {
@@ -41,6 +42,8 @@ interface AdminPageProps {
   onUpdateUser: (userid: string, userData: Partial<User>) => void
   onDeleteUser: (userid: string) => void
   onBackToChat: () => void
+  userFrequencyData?: Array<{ name: string; users: number }>
+  onToggleActive?: (userid: string, makeActive: boolean) => void
 }
 
 const validatePassword = (password: string): string | null => {
@@ -64,6 +67,8 @@ export function AdminPage({
   onUpdateUser,
   onDeleteUser,
   onBackToChat,
+  userFrequencyData,
+  onToggleActive,
 }: AdminPageProps) {
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [showEditDialog, setShowEditDialog] = useState(false)
@@ -76,8 +81,57 @@ export function AdminPage({
   })
   const [errors, setErrors] = useState<{ [key: string]: string }>({}) // Added error state
 
-  // Generate user frequency data for chart
-  const userFrequencyData = [
+  const isEditDirty = !!editingUser && (
+    formData.role !== editingUser.role || !!formData.password || !!formData.confirmPassword
+  )
+
+  // Upload document (PDF) state
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadMessage, setUploadMessage] = useState<string>("")
+  const [uploadError, setUploadError] = useState<string>("")
+
+  const handleOpenFilePicker = () => {
+    setUploadMessage("")
+    setUploadError("")
+    fileInputRef.current?.click()
+  }
+
+  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+      setUploadError("Please select a PDF document.")
+      e.target.value = ""
+      return
+    }
+
+    setIsUploading(true)
+    setUploadError("")
+    setUploadMessage("")
+    try {
+      const form = new FormData()
+      form.append("file", file)
+
+      const res = await fetch("https://backend-ltzf.onrender.com/upload-document", {
+        method: "POST",
+        body: form,
+      })
+      if (!res.ok) {
+        throw new Error("Upload failed")
+      }
+      setUploadMessage("Document uploaded successfully.")
+    } catch (err) {
+      setUploadError("Failed to upload document. Please try again.")
+    } finally {
+      setIsUploading(false)
+      e.target.value = ""
+    }
+  }
+
+  // Fallback user frequency if not provided via props
+  const fallbackUserFrequency = [
     { name: "Jan", users: 12 },
     { name: "Feb", users: 19 },
     { name: "Mar", users: 15 },
@@ -143,9 +197,7 @@ export function AdminPage({
   const handleUpdateUser = () => {
     const newErrors: { [key: string]: string } = {}
 
-    if (!formData.username.trim()) {
-      newErrors.username = "Username is required"
-    }
+    // Username is locked in edit and not editable; no need to validate username non-empty here
     if (formData.password) {
       const passwordError = validatePassword(formData.password)
       if (passwordError) {
@@ -155,9 +207,7 @@ export function AdminPage({
         newErrors.confirmPassword = "Passwords do not match"
       }
     }
-    if (users.some((u) => u.username === formData.username.trim() && u.userid !== editingUser?.userid)) {
-      newErrors.username = "Username already exists"
-    }
+    // Username cannot change in edit; skip duplicate check
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors)
@@ -165,14 +215,13 @@ export function AdminPage({
     }
 
     if (editingUser) {
+      // Build payload per requirement:
+      // If password unchanged -> send empty password with role
+      // If password changed and matches confirm -> send password and role
       const updateData: Partial<User> = {
-        username: formData.username.trim(),
         role: formData.role,
       }
-      // Only update password if provided
-      if (formData.password) {
-        updateData.password = formData.password
-      }
+      updateData.password = formData.password ? formData.password : ""
 
       onUpdateUser(editingUser.userid, updateData)
       setFormData({ username: "", password: "", confirmPassword: "", role: "user" })
@@ -244,7 +293,7 @@ export function AdminPage({
             <CardContent>
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={userFrequencyData}>
+                  <BarChart data={userFrequencyData ?? fallbackUserFrequency}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#6b7280" opacity={0.3} />
                     <XAxis
                       dataKey="name"
@@ -276,6 +325,33 @@ export function AdminPage({
             </CardContent>
           </Card>
 
+          {/* Document Upload */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <div>
+                <CardTitle className="text-sm font-medium">Upload Document</CardTitle>
+                <CardDescription>Upload a PDF document to the backend</CardDescription>
+              </div>
+              <Button onClick={handleOpenFilePicker} disabled={isUploading}>
+                {isUploading ? "Uploading..." : "Upload PDF"}
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="application/pdf,.pdf"
+                className="hidden"
+                onChange={handleFileSelected}
+              />
+            </CardHeader>
+            <CardContent>
+              {uploadMessage && <p className="text-sm text-green-600">{uploadMessage}</p>}
+              {uploadError && <p className="text-sm text-red-600">{uploadError}</p>}
+              {!uploadMessage && !uploadError && (
+                <p className="text-xs text-muted-foreground">Only PDF files are supported.</p>
+              )}
+            </CardContent>
+          </Card>
+
           {/* User Management Table */}
           <Card>
             <CardHeader>
@@ -299,57 +375,57 @@ export function AdminPage({
                       </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
-                      <div className="grid grid-cols-4 items-center gap-4">
+                      <div className="grid grid-cols-[150px_1fr] items-center gap-4">
                         <Label htmlFor="username" className="text-right">
                           Username
                         </Label>
-                        <div className="col-span-3">
+                        <div>
                           <Input
                             id="username"
                             value={formData.username}
                             onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                            className={errors.username ? "border-red-500" : ""}
+                            className={errors.username ? "border border-red-500" : "border"}
                           />
                           {errors.username && <p className="text-sm text-red-500 mt-1">{errors.username}</p>}
                         </div>
                       </div>
-                      <div className="grid grid-cols-4 items-center gap-4">
+                      <div className="grid grid-cols-[150px_1fr] items-center gap-4">
                         <Label htmlFor="password" className="text-right">
                           Password
                         </Label>
-                        <div className="col-span-3">
+                        <div>
                           <Input
                             id="password"
                             type="password"
                             value={formData.password}
                             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                            className={errors.password ? "border-red-500" : ""}
+                            className={errors.password ? "border border-red-500" : "border"}
                           />
                           {errors.password && <p className="text-sm text-red-500 mt-1">{errors.password}</p>}
                         </div>
                       </div>
-                      <div className="grid grid-cols-4 items-center gap-4">
+                      <div className="grid grid-cols-[150px_1fr] items-center gap-4">
                         <Label htmlFor="confirmPassword" className="text-right">
                           Confirm Password
                         </Label>
+                        <div>
                         <Input
                           id="confirmPassword"
                           type="password"
                           value={formData.confirmPassword}
                           onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                          className={`col-span-3 ${errors.confirmPassword ? "border-red-500" : ""}`}
+                            className={`${errors.confirmPassword ? "border border-red-500" : "border"}`}
                         />
                         {errors.confirmPassword && (
-                          <div className="col-span-3 col-start-2">
                             <p className="text-sm text-red-500 mt-1">{errors.confirmPassword}</p>
-                          </div>
                         )}
                       </div>
-                      <div className="grid grid-cols-4 items-center gap-4">
+                      </div>
+                      <div className="grid grid-cols-[150px_1fr] items-center gap-4">
                         <Label htmlFor="role" className="text-right">
                           Role
                         </Label>
-                        <div className="col-span-3">
+                        <div>
                           <Select
                             value={formData.role}
                             onValueChange={(value: "user" | "admin") => setFormData({ ...formData, role: value })}
@@ -411,13 +487,24 @@ export function AdminPage({
                           <Button
                             variant="ghost"
                             size="sm"
+                            onClick={() => onToggleActive && onToggleActive(user.userid, !(user.is_active ?? true))}
+                            className={`h-8 px-2 text-xs ${
+                              user.is_active ? "text-amber-600 hover:text-amber-700" : "text-emerald-600 hover:text-emerald-700"
+                            }`}
+                          >
+                            {user.is_active ? "Deactivate" : "Activate"}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => handleDeleteUser(user.userid)}
                             className={`h-8 w-8 p-0 ${
-                              (!!currentUser && currentUser.userid === user.userid)
+                              (!!currentUser && currentUser.userid === user.userid) || user.role === "admin"
                                 ? "text-muted-foreground cursor-not-allowed"
                                 : "text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
                             }`}
-                            disabled={!!currentUser && currentUser.userid === user.userid}
+                            disabled={(!!currentUser && currentUser.userid === user.userid) || user.role === "admin"}
+                            title={user.role === "admin" ? "Admin users cannot be deleted" : ""}
                           >
                             <TrashIcon className="h-4 w-4" />
                           </Button>
@@ -440,59 +527,59 @@ export function AdminPage({
             <DialogDescription>Update user information and role.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
+            <div className="grid grid-cols-[150px_1fr] items-center gap-4">
               <Label htmlFor="edit-username" className="text-right">
                 Username
               </Label>
-              <div className="col-span-3">
+              <div>
                 <Input
                   id="edit-username"
                   value={formData.username}
-                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                  className={errors.username ? "border-red-500" : ""}
+                  disabled
+                  className={errors.username ? "border border-red-500" : "border"}
                 />
                 {errors.username && <p className="text-sm text-red-500 mt-1">{errors.username}</p>}
               </div>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
+            <div className="grid grid-cols-[150px_1fr] items-center gap-4">
               <Label htmlFor="edit-password" className="text-right">
                 New Password
               </Label>
-              <div className="col-span-3 w-full">
+              <div className="w-full">
                 <Input
                   id="edit-password"
                   type="password"
                   placeholder="Leave empty to keep current password"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className={`w-full ${errors.password ? "border-red-500" : ""}`}
+                  className={`w-full ${errors.password ? "border border-red-500" : "border"}`}
                 />
                 {errors.password && <p className="text-sm text-red-500 mt-1">{errors.password}</p>}
               </div>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
+            <div className="grid grid-cols-[150px_1fr] items-center gap-4">
               <Label htmlFor="edit-confirmPassword" className="text-right">
                 Confirm Password
               </Label>
+              <div className="w-full">
               <Input
                 id="edit-confirmPassword"
                 type="password"
                 placeholder="Confirm new password"
                 value={formData.confirmPassword}
                 onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                className={`col-span-3 ${errors.confirmPassword ? "border-red-500" : ""}`}
+                  className={`w-full ${errors.confirmPassword ? "border border-red-500" : "border"}`}
               />
               {errors.confirmPassword && (
-                <div className="col-span-3 col-start-2">
                   <p className="text-sm text-red-500 mt-1">{errors.confirmPassword}</p>
-                </div>
               )}
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
+            </div>
+            <div className="grid grid-cols-[150px_1fr] items-center gap-4">
               <Label htmlFor="edit-role" className="text-right">
                 Role
               </Label>
-              <div className="col-span-3">
+              <div>
                 <Select
                   value={formData.role}
                   onValueChange={(value: "user" | "admin") => setFormData({ ...formData, role: value })}
@@ -509,7 +596,9 @@ export function AdminPage({
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={handleUpdateUser}>Update User</Button>
+            <Button onClick={handleUpdateUser} disabled={!isEditDirty}>
+              Update User
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
