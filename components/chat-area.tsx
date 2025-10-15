@@ -154,7 +154,7 @@ export function ChatArea({ currentChatId, chats, isLoggedIn, onLogin, onToggleSi
       body.set("text", messageContent)
 
       console.log("[CHAT SEND] userID=", userId, "chatID=", numericChatId, "text=", messageContent)
-      const response = await fetch("https://backend-.onrender.com/chat", {
+      const response = await fetch("https://backend-08yt.onrender.com/chat", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body,
