@@ -154,7 +154,7 @@ export function ChatArea({ currentChatId, chats, isLoggedIn, onLogin, onToggleSi
       body.set("text", messageContent)
 
       console.log("[CHAT SEND] userID=", userId, "chatID=", numericChatId, "text=", messageContent)
-      const response = await fetch("https://backend-ltzf.onrender.com/chat", {
+      const response = await fetch("https://backend-.onrender.com/chat", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body,
@@ -181,7 +181,7 @@ export function ChatArea({ currentChatId, chats, isLoggedIn, onLogin, onToggleSi
         const delay = (ms: number) => new Promise((r) => setTimeout(r, ms))
         let synced: Message[] | null = null
         for (let attempt = 0; attempt < maxAttempts; attempt++) {
-          const msgRes = await fetch(`https://backend-ltzf.onrender.com/getchatmessages?chat_id=${encodeURIComponent(numericChatId)}`)
+          const msgRes = await fetch(`https://backend-08yt.onrender.com/getchatmessages?chat_id=${encodeURIComponent(numericChatId)}`)
           if (msgRes.ok) {
             const data: Array<{ sender: string; content: string; timestamp: string }> = await msgRes.json()
             const serverMessages = data.map((m, idx) => ({

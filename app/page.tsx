@@ -104,7 +104,7 @@ export default function ChatApp() {
   ) => {
     try {
       setIsChatsLoading(true)
-      const res = await fetch(`https://backend-ltzf.onrender.com/getuserchats?user_id=${encodeURIComponent(userId)}`)
+      const res = await fetch(`https://backend-08yt.onrender.com/getuserchats?user_id=${encodeURIComponent(userId)}`)
       if (!res.ok) {
         return [] as {
           id: string
@@ -138,7 +138,7 @@ export default function ChatApp() {
   const loadChatMessages = async (chatId: string) => {
     setIsMessagesLoading(true)
     try {
-      const res = await fetch(`https://backend-ltzf.onrender.com/getchatmessages?chat_id=${encodeURIComponent(chatId)}`)
+      const res = await fetch(`https://backend-08yt.onrender.com/getchatmessages?chat_id=${encodeURIComponent(chatId)}`)
       if (!res.ok) {
         return
       }
@@ -185,7 +185,7 @@ export default function ChatApp() {
       const formData = new FormData()
       formData.append("username", username)
       formData.append("password", password)
-      const res = await fetch("https://backend-ltzf.onrender.com/authenticate", {
+      const res = await fetch("https://backend-08yt.onrender.com/authenticate", {
         method: "POST",
         body: formData,
       })
@@ -230,7 +230,7 @@ export default function ChatApp() {
     setShowAdminPage(true)
     setIsSidebarOpen(false)
     try {
-      const res = await fetch("https://backend-ltzf.onrender.com/get-all-users")
+      const res = await fetch("https://backend-08yt.onrender.com/get-all-users")
       if (!res.ok) return
       const data: {
         users: Array<{ user_id: number; username: string; role: string; last_login?: string }>
@@ -287,7 +287,7 @@ export default function ChatApp() {
         body.set("Role", roleValue)
         body.set("role", roleValue)
 
-        const res = await fetch("https://backend-ltzf.onrender.com/create-user", {
+        const res = await fetch("https://backend-08yt.onrender.com/create-user", {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body,
@@ -295,7 +295,7 @@ export default function ChatApp() {
         if (!res.ok) return
 
         // Refresh users and totals from backend for accuracy
-        const allRes = await fetch("https://backend-ltzf.onrender.com/get-all-users")
+        const allRes = await fetch("https://backend-08yt.onrender.com/get-all-users")
         if (!allRes.ok) return
         const data: {
           users: Array<{ user_id: number; username: string; role: string; last_login?: string }>
@@ -339,7 +339,7 @@ export default function ChatApp() {
       body.set("role", normalizeRole(userData.role))
       body.set("password", String(userData.password ?? ""))
 
-      const res = await fetch("https://backend-ltzf.onrender.com/change-user-details", {
+      const res = await fetch("https://backend-08yt.onrender.com/change-user-details", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body,
@@ -393,7 +393,7 @@ export default function ChatApp() {
         const body = new URLSearchParams()
         body.set("userID", String(currentUser.userid))
         body.set("chat_name", chatTitle)
-        const res = await fetch("https://backend-ltzf.onrender.com/create-chat", {
+        const res = await fetch("https://backend-08yt.onrender.com/create-chat", {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body,
@@ -406,7 +406,7 @@ export default function ChatApp() {
         } catch {}
         // Fallback: fetch list and pick newest if id not in response
         if (!serverId) {
-          const list = await fetch(`https://backend-ltzf.onrender.com/getuserchats?user_id=${encodeURIComponent(currentUser.userid)}`)
+          const list = await fetch(`https://backend-08yt.onrender.com/getuserchats?user_id=${encodeURIComponent(currentUser.userid)}`)
           if (list.ok) {
             const data: Array<{ chat_id: number; chat_name: string; last_msg: string; timestamp: string }> = await list.json()
             if (data.length) {
@@ -488,10 +488,10 @@ export default function ChatApp() {
                 body.set("UserId", userid)
                 body.set("userID", userid)
                 const endpoint = makeActive ? "activate-user" : "deactivate-user"
-                const res = await fetch(`https://backend-ltzf.onrender.com/${endpoint}`, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body })
+                const res = await fetch(`https://backend-08yt.onrender.com/${endpoint}`, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body })
                 if (!res.ok) return
                 // Refresh users to sync is_active
-                const allRes = await fetch("https://backend-ltzf.onrender.com/get-all-users")
+                const allRes = await fetch("https://backend-08yt.onrender.com/get-all-users")
                 if (!allRes.ok) return
                 const data: {
                   users: Array<{ user_id: number; username: string; role: string; last_login?: string; is_active?: boolean }>

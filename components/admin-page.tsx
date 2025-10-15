@@ -114,7 +114,7 @@ export function AdminPage({
       const form = new FormData()
       form.append("file", file)
 
-      const res = await fetch("https://backend-ltzf.onrender.com/upload-document", {
+      const res = await fetch("https://backend-08yt.onrender.com/upload-document", {
         method: "POST",
         body: form,
       })
